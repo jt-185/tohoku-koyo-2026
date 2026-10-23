@@ -179,12 +179,10 @@ main { max-width: 760px; margin: 0 auto; padding: 26px 16px 40px; }
 .day-nav { display: flex; justify-content: space-between; margin-top: 18px; }
 
 /* ── Stay ── */
-.stay-tags, .stay-place { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.stay-place { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .stay-place { margin-top: 6px; }
 .stay-place svg { width: 15px; height: 15px; fill: none; stroke: var(--sky); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .tag { display: inline-flex; align-items: center; padding: 2px 11px; border-radius: 999px; font-size: 12.5px; font-weight: 500; line-height: 1.6; white-space: nowrap; }
-.tag-date { background: var(--maple-soft); color: var(--maple); letter-spacing: .04em; }
-.tag-nights { background: var(--gold-soft); color: #8a5f17; }
 .tag-place { background: var(--sky-soft); color: var(--sky); }
 .stay h3 { font-size: 21px; margin-top: 10px; }
 .stay .jp { font-size: 13px; color: var(--ink-3); }
@@ -378,3 +376,9 @@ main { max-width: 760px; margin: 0 auto; padding: 26px 16px 40px; }
   background: var(--ink); color: var(--paper); padding: 8px 16px; border-radius: 999px; font-size: 13px; z-index: 30;
 }
 @media (min-width: 820px) { .toast { bottom: 24px; } }
+
+/* 住宿卡：日期與晚數用大字，跟下面的地點標籤區隔 */
+.stay-when { display: flex; align-items: baseline; gap: 10px; }
+.when-date { font-family: var(--serif); font-size: 20px; font-weight: 700; color: var(--maple); letter-spacing: .02em; line-height: 1.3; }
+.when-nights { font-size: 15px; font-weight: 500; color: var(--ink-2); }
+.stay-place { margin-top: 8px; }

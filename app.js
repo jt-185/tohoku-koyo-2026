@@ -433,7 +433,7 @@
       const q = h['地址'] || h['日文名'] || h['名稱'];
       const tel = h['電話'] ? '<a class="btn" href="tel:' + esc(h['電話'].replace(/[^\d+]/g, '')) + '">' + ICON.phone + esc(h['電話']) + '</a>' : '';
       return '<article class="card stay">' + coverHtml(h['名稱'], parseImages(h['圖片'])) +
-        '<div class="stay-top"><div><div class="stay-tags"><span class="tag tag-date">' + dateLabel + '</span><span class="tag tag-nights">' + nights + ' 晚</span></div>' +
+        '<div class="stay-top"><div><div class="stay-when"><span class="when-date">' + dateLabel + '</span><span class="when-nights">' + nights + ' 晚</span></div>' +
         placeTags(h['地區']) +
         '<h3>' + esc(h['名稱']) + '</h3>' + (h['日文名'] && h['日文名'] !== h['名稱'] ? '<div class="jp">' + esc(h['日文名']) + '</div>' : '') + '</div>' +
         statusBadge(h['狀態']) + '</div>' +
