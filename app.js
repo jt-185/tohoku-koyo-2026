@@ -19,6 +19,7 @@
     bed: '<svg viewBox="0 0 24 24"><path d="M3 18V8M3 14h18v4M21 14v-2a3 3 0 0 0-3-3h-7v5"/></svg>',
     star: '<svg viewBox="0 0 24 24"><path d="M12 4l2.3 4.8 5.2.7-3.8 3.6.9 5.2L12 15.8 7.4 18.3l.9-5.2-3.8-3.6 5.2-.7z"/></svg>',
     check: '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    nav: '<svg class="ic-nav" viewBox="0 0 24 24"><path d="M21 3 3.2 11.2l8 1.7 1.7 8.1z"/></svg>',
     route: '<svg viewBox="0 0 24 24"><path d="M9 4.5 3.5 6.5v13l5.5-2 6 2 5.5-2v-13l-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/></svg>',
     plane: '<svg viewBox="0 0 64 24"><path d="M2 12h60" stroke-dasharray="3 4"/><path d="M28 12l-6-7h3l9 7-9 7h-3z" fill="currentColor" stroke="none"/></svg>'
   };
@@ -229,7 +230,7 @@
       const color = TYPE_COLORS[type] || 'var(--ink-3)';
       const links = it['地圖']
         ? '<div class="tl-links"><a class="tl-map" href="' + esc(mapUrl(it['地圖'])) + '" target="_blank" rel="noopener">' + ICON.map + '地圖</a>' +
-          '<a class="tl-map" href="' + esc(navUrl(it['地圖'])) + '" target="_blank" rel="noopener">' + ICON.car + '導航</a></div>'
+          '<a class="tl-map" href="' + esc(navUrl(it['地圖'])) + '" target="_blank" rel="noopener">' + ICON.nav + '導航</a></div>'
         : '';
       const spot = type !== '交通' && spots.find((s) => (s['日文'] && s['日文'] === it['地圖']) || (s['名稱'] && it['項目'].indexOf(s['名稱']) >= 0));
       const thumb = spot ? coverHtml(spot['名稱'], parseImages(spot['圖片']), 'thumb') : '';
@@ -432,15 +433,18 @@
     const L = legs[i];
     if (!L) return;
     const day = { n: 1, pts: [{ ll: L.a, label: L.from || '起點', start: true }, { ll: L.b, label: L.to || '終點', end: true }], alts: [] };
-    const vb = TripMap.fitVB([L.a, L.b].concat(TripMap.routeOf([L.a, L.b]) || []), 50, 4 / 3, 300);
     $('#rm-title').textContent = L.title;
     $('#rm-tags').innerHTML = '<span class="rm-time">' + esc(L.timeText) + '</span>' + (L.kmText ? '<span class="km">' + esc(L.kmText) + '</span>' : '');
-    $('#rm-map').innerHTML = TripMap.render([day], { vb: vb, focus: 1, numbers: true });
-    TripMap.hydrate($('#rm-map'), [day]);
-    const nav = $('#rm-nav');
-    if (L.nav) { nav.href = navUrl(L.nav); nav.hidden = false; } else nav.hidden = true;
     $('#route-modal').hidden = false;
     document.body.style.overflow = 'hidden';
+    // 地圖區域會佔滿彈窗，先量出實際比例再畫，這樣路線圖剛好填滿
+    const box = $('#rm-map');
+    const ratio = Math.max(0.5, Math.min(2, (box.clientWidth || 360) / (box.clientHeight || 360)));
+    const vb = TripMap.fitVB([L.a, L.b].concat(TripMap.routeOf([L.a, L.b]) || []), 50, ratio, 300);
+    box.innerHTML = TripMap.render([day], { vb: vb, focus: 1, numbers: true });
+    TripMap.hydrate(box, [day]);
+    const nav = $('#rm-nav');
+    if (L.nav) { nav.href = navUrl(L.nav); nav.hidden = false; } else nav.hidden = true;
   }
   function closeRoute() {
     $('#route-modal').hidden = true;
@@ -566,11 +570,11 @@
       if (a && b) {
         const [from, to] = r['項目'].split('→').map((x) => x.trim());
         legs.push({ title: r['項目'], from: from, to: to || '', a: a, b: b, timeText: meta.timeText, kmText: meta.kmText, nav: extra(r) });
-        mapBtn = '<button class="map-btn" data-leg="' + (legs.length - 1) + '" aria-label="看「' + esc(r['項目']) + '」的路線圖">' + ICON.route + '</button>';
+        mapBtn = '<button class="map-btn" data-leg="' + (legs.length - 1) + '" aria-label="看「' + esc(r['項目']) + '」的路線圖">' + ICON.route + '<span>路線圖</span></button>';
       }
       return '<li><span class="drive-name">' + esc(r['項目']) + '</span>' +
         '<span class="drive-meta">' + meta.time + meta.km + mapBtn + '</span>' +
-        (extra(r) ? '<a class="nav-go" href="' + esc(navUrl(extra(r))) + '" target="_blank" rel="noopener">' + ICON.car + '導航</a>' : '') + '</li>';
+        (extra(r) ? '<a class="nav-go" href="' + esc(navUrl(extra(r))) + '" target="_blank" rel="noopener">' + ICON.nav + '導航</a>' : '') + '</li>';
     }).join('');
 
     return '<div class="section-title"><h2>航班</h2><p>星宇航空</p></div>' +
@@ -596,7 +600,7 @@
         (s['介紹'] ? '<p class="desc">' + txt(s['介紹']) + '</p>' : '') +
         (facts ? '<div class="facts">' + facts + '</div>' : '') +
         '<div class="btn-row"><a class="btn" href="' + esc(mapUrl(s['日文'] || s['名稱'])) + '" target="_blank" rel="noopener">' + ICON.map + '地圖</a>' +
-        '<a class="btn" href="' + esc(navUrl(s['日文'] || s['名稱'])) + '" target="_blank" rel="noopener">' + ICON.car + '導航</a></div>' +
+        '<a class="btn" href="' + esc(navUrl(s['日文'] || s['名稱'])) + '" target="_blank" rel="noopener">' + ICON.nav + '導航</a></div>' +
         '</article>';
     }).join('');
     return '<div class="section-title"><h2>景點介紹</h2><p>🍁 為 2026 見頃預測</p></div>' +
