@@ -58,9 +58,30 @@
   function coverHtml(title, imgs, cls) {
     if (!imgs.length) return '';
     galleries.push({ title: title, imgs: imgs });
-    return '<button class="' + (cls || 'cover') + '" data-gallery="' + (galleries.length - 1) + '" aria-label="看「' + esc(title) + '」的照片">' +
-      '<img src="' + esc(imgs[0].thumb) + '" alt="" loading="lazy">' +
-      (imgs.length > 1 ? '<span class="cover-count">' + imgs.length + ' 張</span>' : '') + '</button>';
+    const gi = galleries.length - 1;
+    const img = '<img src="' + esc(imgs[0].thumb) + '" alt="" loading="lazy">';
+    if (cls === 'thumb') {
+      return '<button class="thumb" data-gallery="' + gi + '" aria-label="看「' + esc(title) + '」的照片">' + img +
+        (imgs.length > 1 ? '<span class="cover-count">' + imgs.length + '</span>' : '') + '</button>';
+    }
+    // 大封面：多張時直接在卡片上左右切換，點照片再放大
+    const multi = imgs.length > 1;
+    return '<div class="cover" data-gi="' + gi + '" data-idx="0">' +
+      '<button class="cover-img" data-gallery="' + gi + '" aria-label="放大「' + esc(title) + '」的照片">' + img + '</button>' +
+      (multi
+        ? '<button class="cover-arrow prev" data-cover="-1" aria-label="上一張">‹</button>' +
+          '<button class="cover-arrow next" data-cover="1" aria-label="下一張">›</button>' +
+          '<span class="cover-dots">' + imgs.map((_, i) => '<i' + (i === 0 ? ' class="on"' : '') + '></i>').join('') + '</span>'
+        : '') +
+      '</div>';
+  }
+  function stepCover(cover, d) {
+    const g = galleries[Number(cover.dataset.gi)];
+    if (!g || g.imgs.length < 2) return;
+    const i = (Number(cover.dataset.idx) + d + g.imgs.length) % g.imgs.length;
+    cover.dataset.idx = i;
+    cover.querySelector('.cover-img img').src = g.imgs[i].thumb;
+    cover.querySelectorAll('.cover-dots i').forEach((dot, k) => dot.classList.toggle('on', k === i));
   }
 
   function rows(name) {
@@ -193,7 +214,7 @@
         ? '<div class="tl-links"><a class="tl-map" href="' + esc(mapUrl(it['地圖'])) + '" target="_blank" rel="noopener">' + ICON.map + '地圖</a>' +
           '<a class="tl-map" href="' + esc(navUrl(it['地圖'])) + '" target="_blank" rel="noopener">' + ICON.car + '導航</a></div>'
         : '';
-      const spot = spots.find((s) => (s['日文'] && s['日文'] === it['地圖']) || (s['名稱'] && it['項目'].indexOf(s['名稱']) >= 0));
+      const spot = type !== '交通' && spots.find((s) => (s['日文'] && s['日文'] === it['地圖']) || (s['名稱'] && it['項目'].indexOf(s['名稱']) >= 0));
       const thumb = spot ? coverHtml(spot['名稱'], parseImages(spot['圖片']), 'thumb') : '';
       return '<li class="tl' + (type === '備案' ? ' is-alt' : '') + '" style="--c:' + color + '">' +
         '<div class="tl-time">' + esc(it['時間']) + '</div>' +
@@ -203,19 +224,24 @@
         (it['說明'] ? '<p class="tl-desc">' + txt(it['說明']) + '</p>' : '') + links + '</div>' + thumb + '</div></li>';
     }).join('');
 
-    dayMap = dayPoints(currentDay);
-    const legend = dayMap.pts.map((p, i) => '<span><i class="pin-mini' + (p.start ? ' start' : '') + '">' + pinLabel(dayMap, i) + '</i>' + esc(p.name) + '</span>').join('<b>→</b>');
-    const mapHtml = dayMap.pts.length
-      ? '<div class="day-map-wrap"><div id="day-map" class="day-map"></div>' +
+    const all = allDayPoints();
+    const dm = all.find((d) => d.n === currentDay) || dayPoints(currentDay);
+    const legend = dm.pts.map((p, i) => '<span><i class="pin-mini' + (p.start ? ' start' : '') + '" style="--dc:' + TripMap.color(currentDay) + '">' + pinLabel(dm, i) + '</i>' + esc(p.label) + '</span>').join('<b>→</b>');
+    const mapHtml = dm.pts.length
+      ? '<div class="day-map-wrap">' +
+        '<div class="map-switch" role="tablist"><button data-mapmode="simple" class="' + (mapMode === 'simple' ? 'active' : '') + '">簡易地圖</button>' +
+        '<button data-mapmode="google" class="' + (mapMode === 'google' ? 'active' : '') + '">Google 地圖</button></div>' +
+        '<div id="day-map" class="day-map' + (mapMode === 'google' ? ' is-google' : '') + '">' + dayMapInner(dm, all) + '</div>' +
         '<p class="map-legend">' + legend + '</p>' +
-        (dayMap.pts.length >= 2 ? '<a class="btn" href="' + esc(routeUrl(dayMap.pts)) + '" target="_blank" rel="noopener">' + ICON.map + '用 Google 地圖看這天的路線</a>' : '') +
+        (dm.pts.length >= 2 ? '<a class="btn" href="' + esc(routeUrl(dm.pts)) + '" target="_blank" rel="noopener">' + ICON.map + '用 Google 地圖 App 開這天的路線</a>' : '') +
         '</div>'
       : '';
 
     const prev = days.find((d) => Number(d['Day']) === currentDay - 1);
     const next = days.find((d) => Number(d['Day']) === currentDay + 1);
 
-    return '<div class="section-title"><h2>每日行程</h2><p>點日期切換</p></div>' +
+    return overviewHtml(days, all) +
+      '<div class="section-title days-title"><h2>每日行程</h2><p>點日期切換</p></div>' +
       '<div class="days">' + chips + '</div>' +
       '<article class="card day-head">' +
         '<div class="eyebrow">DAY ' + esc(day['Day']) + '・' + esc(day['日期']) + '（' + esc(day['星期']) + '）</div>' +
@@ -231,81 +257,119 @@
       '</div>';
   }
 
-  // ── day map ──
-  let dayMap = null;
-  let mapInst = null;
-  const ROUTE_KEY = 'tohoku-route:';
+  // ── maps ──
+  let mapMode = 'simple';
+  try { mapMode = localStorage.getItem('tohoku-map-mode') || 'simple'; } catch (e) { /* ignore */ }
+  let overviewDay = 0; // 0 = 全程
 
   // 起點是前一晚的住宿，接著是當天有座標的地點（備案另外標示，不連線）
   function dayPoints(n) {
     const items = rows('行程');
     const pts = [], alts = [];
+    const toPt = (it) => ({
+      ll: parseLatLng(it['座標']),
+      name: it['項目'].replace(/\s*入住$/, ''),
+      label: it['地圖標籤'] || it['項目'].replace(/\s*入住$/, ''),
+      q: it['地圖'],
+      stay: it['類型'] === '住宿'
+    });
     const prevStays = items.filter((it) => Number(it['Day']) < n && it['類型'] === '住宿' && parseLatLng(it['座標']));
-    if (prevStays.length) {
-      const p = prevStays[prevStays.length - 1];
-      pts.push({ ll: parseLatLng(p['座標']), name: p['項目'].replace(/\s*入住$/, ''), start: true });
-    }
+    if (prevStays.length) pts.push(Object.assign(toPt(prevStays[prevStays.length - 1]), { start: true }));
     items.filter((it) => Number(it['Day']) === n).forEach((it) => {
-      const ll = parseLatLng(it['座標']);
-      if (!ll) return;
-      const pt = { ll: ll, name: it['項目'].replace(/\s*入住$/, '') };
+      if (!parseLatLng(it['座標'])) return;
+      const pt = toPt(it);
       if (it['類型'] === '備案') { alts.push(pt); return; }
       const last = pts[pts.length - 1];
-      if (last && last.ll[0] === ll[0] && last.ll[1] === ll[1]) return;
+      if (last && last.ll[0] === pt.ll[0] && last.ll[1] === pt.ll[1]) return;
       pts.push(pt);
     });
-    return { pts: pts, alts: alts };
+    return { n: n, pts: pts, alts: alts };
+  }
+  function allDayPoints() {
+    return rows('每日').map((d) => dayPoints(Number(d['Day'])));
   }
   function pinLabel(dm, i) {
     if (dm.pts[i].start) return '起';
     return String(dm.pts[0].start ? i : i + 1);
   }
+  const placeOf = (p) => p.q || p.ll.join(',');
   function routeUrl(pts) {
-    const ll = (p) => p.ll.join(',');
-    const mid = pts.slice(1, -1).slice(0, 9).map(ll).join('|');
-    return 'https://www.google.com/maps/dir/?api=1&travelmode=driving&origin=' + ll(pts[0]) +
-      '&destination=' + ll(pts[pts.length - 1]) + (mid ? '&waypoints=' + encodeURIComponent(mid) : '');
+    const mid = pts.slice(1, -1).slice(0, 9).map(placeOf).join('|');
+    return 'https://www.google.com/maps/dir/?api=1&travelmode=driving&origin=' + encodeURIComponent(placeOf(pts[0])) +
+      '&destination=' + encodeURIComponent(placeOf(pts[pts.length - 1])) + (mid ? '&waypoints=' + encodeURIComponent(mid) : '');
   }
-
-  function initDayMap() {
-    if (mapInst) { mapInst.remove(); mapInst = null; }
-    const el = document.getElementById('day-map');
-    if (!el || !window.L || !dayMap || !dayMap.pts.length) return;
-    const touch = window.matchMedia('(pointer: coarse)').matches;
-    const map = mapInst = L.map(el, { scrollWheelZoom: false, dragging: !touch, tap: false, zoomControl: !touch });
-    L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png', {
-      attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">国土地理院</a>', minZoom: 5, maxZoom: 18
-    }).addTo(map);
-    map.fitBounds(dayMap.pts.concat(dayMap.alts).map((p) => p.ll), { padding: [30, 30], maxZoom: 12 });
-
-    const pin = (cls, label) => L.divIcon({ className: 'pin ' + cls, html: '<span>' + label + '</span>', iconSize: [26, 26], iconAnchor: [13, 13] });
-    dayMap.pts.forEach((p, i) => {
-      L.marker(p.ll, { icon: pin(p.start ? 'pin-start' : '', pinLabel(dayMap, i)) })
-        .bindTooltip(p.name, { direction: 'top', offset: [0, -12] }).addTo(map);
-    });
-    dayMap.alts.forEach((p) => {
-      L.marker(p.ll, { icon: pin('pin-alt', '備') }).bindTooltip(p.name + '（備案）', { direction: 'top', offset: [0, -12] }).addTo(map);
-    });
-    if (dayMap.pts.length >= 2) drawRoute(dayMap.pts.map((p) => p.ll), map);
-  }
-
-  // 開車路線用 OSRM 算，算過的存在手機裡；連不上時改畫虛線
-  async function drawRoute(lls, map) {
-    const key = ROUTE_KEY + lls.map((l) => l.join(',')).join(';');
-    let line = null;
-    try { line = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { /* ignore */ }
-    if (!line) {
-      try {
-        const url = 'https://router.project-osrm.org/route/v1/driving/' + lls.map((l) => l[1] + ',' + l[0]).join(';') + '?overview=full&geometries=geojson';
-        const json = await (await fetch(url)).json();
-        if (json.code !== 'Ok') throw new Error(json.code);
-        line = json.routes[0].geometry.coordinates.map((c) => [Math.round(c[1] * 1e5) / 1e5, Math.round(c[0] * 1e5) / 1e5]);
-        try { localStorage.setItem(key, JSON.stringify(line)); } catch (e) { /* ignore */ }
-      } catch (e) { line = null; }
+  function googleEmbedUrl(pts) {
+    const key = CFG.GOOGLE_MAPS_EMBED_KEY;
+    if (key) {
+      const ll = (p) => p.ll.join(',');
+      const base = 'https://www.google.com/maps/embed/v1/';
+      if (pts.length === 1) return base + 'place?key=' + encodeURIComponent(key) + '&q=' + ll(pts[0]) + '&language=zh-TW';
+      const mid = pts.slice(1, -1).map(ll).join('|');
+      return base + 'directions?key=' + encodeURIComponent(key) + '&mode=driving&language=zh-TW&origin=' + ll(pts[0]) +
+        '&destination=' + ll(pts[pts.length - 1]) + (mid ? '&waypoints=' + encodeURIComponent(mid) : '');
     }
-    if (map !== mapInst) return;
-    if (line) L.polyline(line, { color: '#b23a2a', weight: 4, opacity: 0.85 }).addTo(map);
-    else L.polyline(lls, { color: '#b23a2a', weight: 3, dashArray: '6 8' }).addTo(map);
+    // 沒有金鑰時用舊版免金鑰嵌入；地名常找不到路線，所以用座標
+    const loc = (p) => p.ll.join(',');
+    if (pts.length === 1) return 'https://maps.google.com/maps?q=' + loc(pts[0]) + '&hl=zh-TW&output=embed';
+    return 'https://maps.google.com/maps?saddr=' + loc(pts[0]) + '&daddr=' + pts.slice(1).map(loc).join('+to:') + '&dirflg=d&hl=zh-TW&output=embed';
+  }
+
+  function dayMapInner(dm, all) {
+    if (mapMode === 'google') {
+      return '<iframe class="gmap" src="' + esc(googleEmbedUrl(dm.pts)) + '" title="Google 地圖路線" allowfullscreen></iframe>';
+    }
+    const lls = dm.pts.concat(dm.alts).map((p) => p.ll);
+    return TripMap.render(all, { vb: TripMap.fitVB(lls, 60, 4 / 3, 300), focus: dm.n, numbers: true });
+  }
+
+  function overviewHtml(days, all) {
+    const chips = '<button class="ov-chip' + (overviewDay ? '' : ' active') + '" data-ov="0">全程</button>' +
+      days.map((d) => {
+        const n = Number(d['Day']);
+        return '<button class="ov-chip' + (overviewDay === n ? ' active' : '') + '" data-ov="' + n + '" style="--dc:' + TripMap.color(n) + '"><i></i>D' + n + '</button>';
+      }).join('');
+    return '<section class="card overview">' +
+      '<div class="section-title"><h2>全程路線</h2><p>點 Day 看那天開哪一段</p></div>' +
+      '<div class="ov-chips">' + chips + '</div>' +
+      '<div class="ov-map" id="ov-map">' + overviewMap(all) + '</div>' +
+      '<p class="ov-note" id="ov-note">' + overviewNote(days) + '</p>' +
+      '</section>';
+  }
+  function overviewMap(all) {
+    const lls = [].concat(...all.map((d) => d.pts.concat(d.alts).map((p) => p.ll)));
+    return lls.length ? TripMap.render(all, { vb: TripMap.fitVB(lls, 70, null, 400), focus: overviewDay }) : '';
+  }
+  function overviewNote(days) {
+    if (!overviewDay) return '7 天的路線用不同顏色標示，實心圓點是住宿。';
+    const d = days.find((x) => Number(x['Day']) === overviewDay);
+    if (!d) return '';
+    return '<b style="color:' + TripMap.color(overviewDay) + '">Day ' + overviewDay + '</b>　' + esc(d['路線']) +
+      '　<button class="link-btn" data-day="' + overviewDay + '">看詳細行程 ↓</button>';
+  }
+  function setOverviewDay(n) {
+    overviewDay = n;
+    const all = allDayPoints();
+    const box = $('#ov-map');
+    if (!box) return;
+    box.innerHTML = overviewMap(all);
+    $('#ov-note').innerHTML = overviewNote(rows('每日'));
+    document.querySelectorAll('.ov-chip').forEach((c) => c.classList.toggle('active', Number(c.dataset.ov) === n));
+    TripMap.hydrate(box, all);
+  }
+  function setMapMode(mode) {
+    mapMode = mode;
+    try { localStorage.setItem('tohoku-map-mode', mode); } catch (e) { /* ignore */ }
+    const box = $('#day-map');
+    if (!box) return;
+    const all = allDayPoints();
+    box.innerHTML = dayMapInner(dayPoints(currentDay), all);
+    box.classList.toggle('is-google', mode === 'google');
+    document.querySelectorAll('[data-mapmode]').forEach((b) => b.classList.toggle('active', b.dataset.mapmode === mode));
+    if (mode === 'simple') TripMap.hydrate(box, all);
+  }
+  function hydrateMaps() {
+    const all = allDayPoints();
+    ['#ov-map', '#day-map'].forEach((sel) => { const el = $(sel); if (el && el.querySelector('svg')) TripMap.hydrate(el, all); });
   }
 
   // ── lightbox ──
@@ -566,9 +630,8 @@
     document.querySelectorAll('.tabs a').forEach((a) => a.classList.toggle('active', a.dataset.view === v));
     const fn = { plan: viewPlan, stay: viewStay, move: viewMove, spots: viewSpots, prep: viewPrep }[v];
     galleries = [];
-    dayMap = null;
     $('#app').innerHTML = fn();
-    initDayMap();
+    hydrateMaps();
   }
   function renderAll() {
     renderHeader();
@@ -584,13 +647,25 @@
       return;
     }
     if (e.target.id === 'lightbox' || e.target.classList.contains('lb-figure')) { closeLightbox(); return; }
+    const ov = e.target.closest('[data-ov]');
+    if (ov) { setOverviewDay(Number(ov.dataset.ov)); return; }
+    const routeEl = e.target.closest('#ov-map [data-route-day]');
+    if (routeEl) { setOverviewDay(Number(routeEl.dataset.routeDay)); return; }
+    const mode = e.target.closest('[data-mapmode]');
+    if (mode) { setMapMode(mode.dataset.mapmode); return; }
+    const coverBtn = e.target.closest('[data-cover]');
+    if (coverBtn) { stepCover(coverBtn.closest('.cover'), Number(coverBtn.dataset.cover)); return; }
     const gal = e.target.closest('[data-gallery]');
-    if (gal) { openLightbox(galleries[Number(gal.dataset.gallery)], 0); return; }
+    if (gal) {
+      const cover = gal.closest('.cover');
+      openLightbox(galleries[Number(gal.dataset.gallery)], cover ? Number(cover.dataset.idx) : 0);
+      return;
+    }
     const dayBtn = e.target.closest('[data-day]');
     if (dayBtn) {
       currentDay = Number(dayBtn.dataset.day);
       renderView();
-      if (dayBtn.closest('.day-nav')) document.querySelector('.days').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (dayBtn.closest('.day-nav, .ov-note')) document.querySelector('.days-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
       const active = document.querySelector('.day-chip.active');
       if (active) active.scrollIntoView({ inline: 'center', block: 'nearest' });
       return;
@@ -613,6 +688,20 @@
     else if (e.key === 'ArrowRight') stepLightbox(1);
     else if (e.key === 'ArrowLeft') stepLightbox(-1);
   });
+  // 卡片封面也可以左右滑
+  let coverTouch = null;
+  document.addEventListener('touchstart', (e) => {
+    const cover = e.target.closest('.cover');
+    coverTouch = cover ? { cover: cover, x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (!coverTouch) return;
+    const dx = e.changedTouches[0].clientX - coverTouch.x;
+    const dy = e.changedTouches[0].clientY - coverTouch.y;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) stepCover(coverTouch.cover, dx < 0 ? 1 : -1);
+    coverTouch = null;
+  });
+
   let touchX = null;
   $('#lightbox').addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
   $('#lightbox').addEventListener('touchend', (e) => {
