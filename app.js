@@ -628,6 +628,11 @@
     return start > 0 ? grid.slice(start).map(String).filter(Boolean) : [];
   }
   function isOn(v) { return String(v).toUpperCase() === 'TRUE'; }
+  // 勾選格裡寫的不是 TRUE/FALSE、而是一段文字（例如「Jaron 代辦」）＝這項由別人代辦，這個人不用自己做
+  function delegatedBy(v) {
+    const t = String(v == null ? '' : v).trim();
+    return t && !/^(TRUE|FALSE)$/i.test(t) ? t : '';
+  }
 
   function localChecks() {
     try { return JSON.parse(localStorage.getItem(LOCAL_CHECKS_KEY) || '{}'); } catch (e) { return {}; }
@@ -653,23 +658,33 @@
     try { me = localStorage.getItem(ME_KEY) || ''; } catch (e) { /* ignore */ }
 
     const progress = people.map((p) => {
-      const done = items.filter((it) => isOn(it[p])).length;
-      const pct = items.length ? Math.round(done / items.length * 100) : 0;
+      const mine = items.filter((it) => !delegatedBy(it[p])); // 代辦的項目不算在這個人的總數裡
+      const done = mine.filter((it) => isOn(it[p])).length;
+      const pct = mine.length ? Math.round(done / mine.length * 100) : 0;
       return '<div class="prog' + (p === me ? ' me' : '') + '"><div class="name">' + esc(p) + '</div>' +
-        '<div class="num">' + done + '<span class="small muted"> / ' + items.length + '</span></div>' +
+        '<div class="num">' + done + '<span class="small muted"> / ' + mine.length + '</span></div>' +
         '<div class="bar"><i style="width:' + pct + '%"></i></div></div>';
     }).join('');
 
     const ordered = me ? [me].concat(people.filter((p) => p !== me)) : people;
     const list = items.map((it) => {
       const link = safeUrl(it['連結']);
-      const chips = ordered.map((p) => '<button class="person' + (isOn(it[p]) ? ' on' : '') + '" data-item="' + esc(it['項目']) + '" data-person="' + esc(p) + '">' +
-        '<span class="box">' + ICON.check + '</span>' + esc(p) + '</button>').join('');
+      const notes = {}; // 代辦說明：「Bornan、Pretty：Jaron 代辦」
+      const chips = ordered.map((p) => {
+        const by = delegatedBy(it[p]);
+        if (by) {
+          (notes[by] = notes[by] || []).push(p);
+          return '<span class="person delegated" title="' + esc(by) + '"><span class="box">代</span>' + esc(p) + '</span>';
+        }
+        return '<button class="person' + (isOn(it[p]) ? ' on' : '') + '" data-item="' + esc(it['項目']) + '" data-person="' + esc(p) + '">' +
+          '<span class="box">' + ICON.check + '</span>' + esc(p) + '</button>';
+      }).join('');
+      const noteHtml = Object.keys(notes).map((by) => '<p class="deleg-note"><b>' + esc(notes[by].join('、')) + '</b>：' + esc(by) + '，不用自己做</p>').join('');
       return '<article class="card check-item">' +
         '<div class="cat">' + esc(it['分類']) + '</div><div class="t">' + esc(it['項目']) + '</div>' +
         (it['說明'] ? '<p class="d">' + txt(it['說明']) + '</p>' : '') +
         (link ? '<p class="d"><a href="' + esc(link) + '" target="_blank" rel="noopener">開啟連結 ↗</a></p>' : '') +
-        '<div class="people" style="--n:' + ordered.length + '">' + chips + '</div></article>';
+        '<div class="people" style="--n:' + ordered.length + '">' + chips + '</div>' + noteHtml + '</article>';
     }).join('');
 
     const whoChips = people.map((p) => '<button class="filter' + (p === me ? ' active' : '') + '" data-me="' + esc(p) + '">' + esc(p) + '</button>').join('');

@@ -621,3 +621,10 @@ body::after {
 .foot-orn svg:nth-of-type(2) { fill: #d4613f; width: 20px; height: 20px; }
 .foot-orn svg:nth-of-type(3) { fill: #b23a2a; transform: rotate(18deg); }
 @media (prefers-reduced-motion: reduce) { .fl { animation: none; opacity: calc(var(--o) * .6); top: var(--y, 20%); } }
+
+/* 由別人代辦的項目：不能點，顯示「代」字，並在下面說明是誰代辦 */
+.person.delegated { cursor: default; background: var(--sky-soft); border: 1px dashed rgba(63, 101, 119, .45); color: var(--sky); }
+.person.delegated .box { background: var(--sky); border-color: var(--sky); color: #fff; font-size: 10px; font-weight: 700; line-height: 1; }
+.deleg-note { margin: 8px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--sky); }
+.deleg-note b { font-weight: 700; }
+@media (max-width: 600px) { .person.delegated .box { font-size: 9px; } }
