@@ -421,10 +421,12 @@
     const cards = stays.map((h) => {
       const nights = Number(h['晚數']) || 1;
       let dateLabel = esc(h['日期']);
+      let dayNo = 0;
       if (start && /^\d+\/\d+$/.test(h['日期'])) {
         const [m, d] = h['日期'].split('/').map(Number);
         const iso = start.slice(0, 4) + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
         dateLabel = esc(h['日期']) + ' – ' + addDays(iso, nights);
+        dayNo = daysBetween(start, iso) + 1;
       }
       const kv = [
         ['房間', h['房間']], ['入住', h['入住']], ['退房', h['退房']], ['餐食', h['餐食']],
@@ -433,7 +435,7 @@
       const q = h['地址'] || h['日文名'] || h['名稱'];
       const tel = h['電話'] ? '<a class="btn" href="tel:' + esc(h['電話'].replace(/[^\d+]/g, '')) + '">' + ICON.phone + esc(h['電話']) + '</a>' : '';
       return '<article class="card stay">' + coverHtml(h['名稱'], parseImages(h['圖片'])) +
-        '<div class="stay-top"><div><div class="stay-tags"><span class="tag tag-date">' + dateLabel + '</span><span class="tag tag-nights">' + nights + ' 晚</span></div>' +
+        '<div class="stay-top"><div><div class="stay-tags">' + (dayNo > 0 ? '<span class="tag tag-day">Day ' + dayNo + '</span>' : '') + '<span class="tag tag-date">' + dateLabel + '</span><span class="tag tag-nights">' + nights + ' 晚</span></div>' +
         placeTags(h['地區']) +
         '<h3>' + esc(h['名稱']) + '</h3>' + (h['日文名'] && h['日文名'] !== h['名稱'] ? '<div class="jp">' + esc(h['日文名']) + '</div>' : '') + '</div>' +
         statusBadge(h['狀態']) + '</div>' +

@@ -184,7 +184,7 @@ main { max-width: 760px; margin: 0 auto; padding: 26px 16px 40px; }
 .stay-place svg { width: 15px; height: 15px; fill: none; stroke: var(--sky); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .tag { display: inline-flex; align-items: center; padding: 2px 11px; border-radius: 999px; font-size: 12.5px; font-weight: 500; line-height: 1.6; white-space: nowrap; }
 .tag-place { background: var(--sky-soft); color: var(--sky); }
-.stay h3 { font-size: 21px; margin-top: 10px; }
+.stay h3 { font-size: 21px; margin-top: 3px; }
 .stay .jp { font-size: 13px; color: var(--ink-3); }
 .stay-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
 .kv { display: grid; grid-template-columns: 64px 1fr; gap: 6px 12px; margin: 14px 0 0; font-size: 14px; }
@@ -381,6 +381,8 @@ main { max-width: 760px; margin: 0 auto; padding: 26px 16px 40px; }
 .stay-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .tag-date { background: var(--maple-soft); color: var(--maple); font-size: 14px; padding: 3px 13px; letter-spacing: .04em; }
 .tag-nights { background: var(--gold-soft); color: #8a5f17; font-size: 14px; padding: 3px 13px; }
-.stay-place { margin-top: 10px; gap: 6px; }
-.place-text { font-size: 14.5px; color: var(--ink-2); line-height: 1.5; }
+.stay-place { margin-top: 7px; gap: 5px; }
+.stay-place svg { width: 13px; height: 13px; }
+.place-text { font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
 .place-text i { font-style: normal; color: var(--ink-3); margin: 0 3px; }
+.tag-day { background: var(--ink); color: var(--paper); font-size: 14px; padding: 3px 13px; letter-spacing: .06em; }
