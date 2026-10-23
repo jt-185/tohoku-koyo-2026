@@ -262,7 +262,7 @@
       '<div class="section-title days-title"><h2>每日行程</h2><p>點日期切換</p></div>' +
       '<div class="days">' + chips + '</div>' +
       '<article class="card day-head">' +
-        '<div class="eyebrow">DAY ' + esc(day['Day']) + '・' + esc(day['日期']) + '（' + esc(day['星期']) + '）</div>' +
+        '<div class="day-corner"><b class="seg-day">DAY ' + esc(day['Day']) + '</b><span class="seg-date">' + esc(day['日期']) + '</span><span class="seg-nights">週' + esc(day['星期']) + '</span></div>' +
         '<h2>' + esc(day['標題']) + '</h2>' +
         '<p class="route">' + esc(day['路線']) + '</p>' +
         (facts ? '<div class="day-facts">' + facts + '</div>' : '') +
@@ -279,8 +279,8 @@
   let mapMode = 'simple';
   try { mapMode = localStorage.getItem('tohoku-map-mode') || 'simple'; } catch (e) { /* ignore */ }
   let overviewDay = 0; // 0 = 全程
-  let ovOpen = true;
-  try { ovOpen = localStorage.getItem('tohoku-ov-open') !== '0'; } catch (e) { /* ignore */ }
+  let ovOpen = false; // 預設收合，點開才看到
+  try { ovOpen = localStorage.getItem('tohoku-ov-open2') === '1'; } catch (e) { /* ignore */ }
 
   // 起點是前一晚的住宿，接著是當天有座標的地點（可選擇的另外標示，不連線）
   function dayPoints(n) {
@@ -378,8 +378,8 @@
       }).join('');
     return '<section class="card overview' + (ovOpen ? '' : ' is-closed') + '">' +
       '<button class="ov-toggle" data-ovtoggle aria-expanded="' + ovOpen + '"><h2>全程路線</h2>' +
-      '<span class="ov-hint">' + (ovOpen ? '點 Day 看那天開哪一段' : '點開來看 7 天的路線') + '</span>' +
-      '<svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>' +
+      '<span class="ov-hint">' + (ovOpen ? '點此收起' : '點開來看 7 天的路線') + '</span>' +
+      '<span class="ov-chev"><svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></button>' +
       '<div class="ov-body">' +
       '<div class="ov-chips">' + chips + '</div>' +
       '<div class="ov-map" id="ov-map">' + overviewMap(all) + '</div>' +
@@ -772,11 +772,11 @@
     const ovT = e.target.closest('[data-ovtoggle]');
     if (ovT) {
       ovOpen = !ovOpen;
-      try { localStorage.setItem('tohoku-ov-open', ovOpen ? '1' : '0'); } catch (err) { /* ignore */ }
+      try { localStorage.setItem('tohoku-ov-open2', ovOpen ? '1' : '0'); } catch (err) { /* ignore */ }
       const card = ovT.closest('.overview');
       card.classList.toggle('is-closed', !ovOpen);
       ovT.setAttribute('aria-expanded', ovOpen);
-      ovT.querySelector('.ov-hint').textContent = ovOpen ? '點 Day 看那天開哪一段' : '點開來看 7 天的路線';
+      ovT.querySelector('.ov-hint').textContent = ovOpen ? '點此收起' : '點開來看 7 天的路線';
       return;
     }
     const ov = e.target.closest('[data-ov]');

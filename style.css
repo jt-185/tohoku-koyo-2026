@@ -334,7 +334,7 @@ main { max-width: 760px; margin: 0 auto; padding: 26px 16px 40px; }
   display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%;
   background: var(--dc, var(--maple)); color: #fff; font-style: normal; font-size: 11px; font-weight: 700;
 }
-.pin-mini.start { background: var(--ink); }
+.pin-mini.start { background: #b23a2a; }
 
 .overview { margin-bottom: 28px; }
 .overview .section-title { margin-top: 0; }
@@ -447,12 +447,21 @@ main { max-width: 760px; margin: 0 auto; padding: 26px 16px 40px; }
 
 /* 全程路線可以收合 */
 .ov-toggle {
-  display: flex; align-items: baseline; gap: 12px; width: 100%; padding: 0; border: 0; background: none; cursor: pointer;
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 0; border: 0; background: none; cursor: pointer;
   text-align: left; color: inherit; font: inherit;
 }
 .ov-toggle h2 { font-size: 21px; }
-.ov-hint { margin-left: auto; font-size: 13px; color: var(--ink-3); }
-.ov-toggle .chev { flex: none; width: 20px; height: 20px; align-self: center; fill: none; stroke: var(--ink-3); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform .25s ease; }
+.ov-hint { margin-left: auto; font-size: 13.5px; font-weight: 700; letter-spacing: .04em; color: #b9832b; }
+.ov-chev {
+  flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%;
+  background: var(--gold-soft); border: 1px solid rgba(185, 131, 43, .35);
+  box-shadow: 0 1px 0 rgba(185, 131, 43, .25), 0 2px 6px rgba(185, 131, 43, .15);
+  transition: background .15s ease, box-shadow .15s ease, transform .08s ease;
+}
+.ov-toggle .chev { width: 16px; height: 16px; fill: none; stroke: #b9832b; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; transition: transform .25s ease; }
+.ov-toggle:hover .ov-chev { background: #f1deb5; box-shadow: 0 1px 0 rgba(185, 131, 43, .3), 0 3px 9px rgba(185, 131, 43, .25); }
+.ov-toggle:active .ov-chev { transform: translateY(1px); box-shadow: none; }
+.overview.is-closed { background: linear-gradient(180deg, #fffdf8 0%, #fcf4e2 100%); border-color: rgba(185, 131, 43, .3); }
 .overview.is-closed .chev { transform: rotate(-90deg); }
 .ov-body { margin-top: 16px; }
 .overview.is-closed .ov-body { display: none; }
@@ -494,3 +503,7 @@ main { max-width: 760px; margin: 0 auto; padding: 26px 16px 40px; }
   .flight-mid svg { height: 18px; }
   .flight-foot { margin: 0 14px; padding: 7px 0 9px; font-size: 12.5px; }
 }
+
+/* 行程頁的 Day 卡：DAY／日期／星期做成左上角的一體式標籤，跟住宿卡一樣 */
+.day-head { position: relative; padding-top: 54px; }
+.day-head h2 { margin-top: 0; }

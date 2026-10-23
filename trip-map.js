@@ -344,8 +344,9 @@
     const circle = (x, y, r, fill, stroke, sw, extra) =>
       '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(1) + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + sw.toFixed(1) + '"' + (extra || '') + '/>';
     let dots = '';
+    let greyDots = '';
     spots.forEach((sp) => {
-      if (sp.kind === 'grey') { dots += circle(sp.x, sp.y, sp.r, '#fffdf8', '#a9a197', 1.4 * u); return; }
+      if (sp.kind === 'grey') { greyDots += circle(sp.x, sp.y, sp.r, '#fffdf8', '#a9a197', 1.4 * u); return; }
       if (Math.hypot(sp.x - sp.ox, sp.y - sp.oy) > 1) {
         dots += '<line x1="' + sp.ox.toFixed(1) + '" y1="' + sp.oy.toFixed(1) + '" x2="' + sp.x.toFixed(1) + '" y2="' + sp.y.toFixed(1) + '" stroke="#2b2622" stroke-width="' + (1.2 * u).toFixed(1) + '" stroke-linecap="round"/>' +
           circle(sp.ox, sp.oy, 2.2 * u, '#2b2622', '#fff', 0.8 * u);
@@ -353,7 +354,7 @@
       if (sp.kind === 'alt') { dots += circle(sp.x, sp.y, sp.r, '#fffdf8', '#8a8178', 1.4 * u, ' stroke-dasharray="' + (2.5 * u).toFixed(1) + ' ' + (2 * u).toFixed(1) + '"'); return; }
       const p = sp.p, d = sp.d;
       if (numbered) {
-        dots += circle(sp.x, sp.y, sp.r, p.start ? '#2b2622' : color(d.n), '#fff', 2 * u);
+        dots += circle(sp.x, sp.y, sp.r, p.start ? '#b23a2a' : p.end ? '#2b2622' : color(d.n), '#fff', 2 * u);
         const num = p.start ? '起' : p.end ? '終' : String(d.pts[0].start ? sp.i : sp.i + 1);
         dots += '<text x="' + sp.x.toFixed(1) + '" y="' + (sp.y + 3.6 * u).toFixed(1) + '" class="pin-num" font-size="' + (10 * u).toFixed(1) + '">' + num + '</text>';
       } else {
@@ -361,7 +362,7 @@
       }
     });
 
-    return s + leaders + dots + texts + '</svg>';
+    return s + leaders + greyDots + dots + texts + '</svg>';
   }
 
   // 把還沒算好的路線抓回來，更新畫面上的虛線
