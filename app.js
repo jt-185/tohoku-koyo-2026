@@ -440,7 +440,10 @@
     // 地圖區域會佔滿彈窗，先量出實際比例再畫，這樣路線圖剛好填滿
     const box = $('#rm-map');
     const ratio = Math.max(0.5, Math.min(2, (box.clientWidth || 360) / (box.clientHeight || 360)));
-    const vb = TripMap.fitVB([L.a, L.b].concat(TripMap.routeOf([L.a, L.b]) || []), 50, ratio, 300);
+    // 每一段都用同一個框（整趟旅程的範圍），才看得出這一段在整張地圖的哪裡到哪裡
+    const all = [];
+    legs.forEach((g) => { all.push(g.a, g.b); (TripMap.routeOf([g.a, g.b]) || []).forEach((p) => all.push(p)); });
+    const vb = TripMap.fitVB(all, 40, ratio, 300);
     box.innerHTML = TripMap.render([day], { vb: vb, focus: 1, numbers: true });
     TripMap.hydrate(box, [day]);
     const nav = $('#rm-nav');

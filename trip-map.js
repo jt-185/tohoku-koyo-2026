@@ -142,16 +142,30 @@
     for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) d = Math.min(d, distSeg(x, y, ring[j][0], ring[j][1], ring[i][0], ring[i][1]));
     return d;
   }
+  // 線段是否穿過矩形（Liang–Barsky）
+  function segBox(sg, b) {
+    let t0 = 0, t1 = 1;
+    const dx = sg[2] - sg[0], dy = sg[3] - sg[1];
+    const p = [-dx, dx, -dy, dy], q = [sg[0] - b[0], b[2] - sg[0], sg[1] - b[1], b[3] - sg[1]];
+    for (let i = 0; i < 4; i++) {
+      if (p[i] === 0) { if (q[i] < 0) return false; continue; }
+      const r = q[i] / p[i];
+      if (p[i] < 0) { if (r > t1) return false; if (r > t0) t0 = r; }
+      else { if (r < t0) return false; if (r < t1) t1 = r; }
+    }
+    return true;
+  }
   function boxDist(x, y, b) {
     const dx = Math.max(b[0] - x, 0, x - b[2]), dy = Math.max(b[1] - y, 0, y - b[3]);
     return Math.hypot(dx, dy);
   }
-  function placePrefLabel(pref, vb, obs, cap, hw) {
+  function placePrefLabel(pref, vb, obs, cap, hw, hh) {
     const [vx, vy, vw, vh] = vb;
     const rings = ringsOf(pref);
     const [cx, cy] = pref.c;
     const cols = 30, rowsN = 24;
     const offs = [-hw, -hw / 2, 0, hw / 2, hw];
+    const offsY = [-hh, 0, hh];
     let best = null;
     for (let i = 0; i < cols; i++) {
       for (let j = 0; j < rowsN; j++) {
@@ -159,14 +173,17 @@
         const ring = rings.find((r) => inRing(x, y, r));
         if (!ring) continue;
         // 文字有一定寬度：沿著文字的橫向取 5 個點，每一點都要在縣內、離路線和地點夠遠
-        let d = Math.min(x - hw - vx, vx + vw - (x + hw), y - vy, vy + vh - y);
-        for (const o of offs) {
-          const px = x + o;
-          if (!inRing(px, y, ring)) { d = 0; break; }
-          d = Math.min(d, ringEdgeDist(px, y, ring));
-          for (const sg of obs.segs) { d = Math.min(d, distSeg(px, y, sg[0], sg[1], sg[2], sg[3])); if (d <= 0) break; }
-          for (const c of obs.circles) d = Math.min(d, Math.hypot(px - c[0], y - c[1]) - c[2]);
-          for (const bx of obs.boxes) d = Math.min(d, boxDist(px, y, bx));
+        let d = Math.min(x - hw - vx, vx + vw - (x + hw), y - hh - vy, vy + vh - (y + hh));
+        for (const oy of offsY) {
+          for (const o of offs) {
+            const px = x + o, py = y + oy;
+            if (!inRing(px, py, ring)) { d = 0; break; }
+            d = Math.min(d, ringEdgeDist(px, py, ring));
+            for (const sg of obs.segs) { d = Math.min(d, distSeg(px, py, sg[0], sg[1], sg[2], sg[3])); if (d <= 0) break; }
+            for (const c of obs.circles) d = Math.min(d, Math.hypot(px - c[0], py - c[1]) - c[2]);
+            for (const bx of obs.boxes) d = Math.min(d, boxDist(px, py, bx));
+            if (d <= 0) break;
+          }
           if (d <= 0) break;
         }
         if (d <= 0) continue;
@@ -226,7 +243,13 @@
       return { d: d, line: line, xy: (line || lls).map(proj) };
     });
 
-    // 3) 地點名稱：依序試右、左、上、下，跟已放的重疊就換位置
+    // 3) 地點名稱：試 8 個方位（先近後遠），避開其他圓圈、其他名稱、畫面邊緣，也不能壓到路線；
+    //    都不行時選壓到路線最少的位置
+    const labelSegs = [];
+    routes.filter((rt) => !focus || rt.d.n === focus).forEach((rt) => {
+      for (let i = 1; i < rt.xy.length; i++) labelSegs.push([rt.xy[i - 1][0], rt.xy[i - 1][1], rt.xy[i][0], rt.xy[i][1]]);
+    });
+    const routeHits = (b) => { let n = 0; for (const sg of labelSegs) if (segBox(sg, b)) n++; return n; };
     const placed = spots.map((sp) => [sp.x - sp.r, sp.y - sp.r, sp.x + sp.r, sp.y + sp.r]);
     const labelBoxes = [];
     let texts = '';
@@ -237,20 +260,33 @@
       else if (numbered) { text = sp.p.label; strong = true; }
       else if (sp.p.stay || focus) { text = sp.p.label; strong = !!sp.p.stay; } else return;
       const fs = (strong ? 12 : 11) * u;
-      const w = textW(text, fs), gap = 3.5 * u, x = sp.x, y = sp.y, r = sp.r;
-      const tries = [
-        [x + r + gap, y + fs * 0.36, 'start', [x + r + gap, y - fs * 0.6, x + r + gap + w, y + fs * 0.5]],
-        [x - r - gap, y + fs * 0.36, 'end', [x - r - gap - w, y - fs * 0.6, x - r - gap, y + fs * 0.5]],
-        [x, y - r - gap, 'middle', [x - w / 2, y - r - gap - fs, x + w / 2, y - r - gap]],
-        [x, y + r + gap + fs * 0.85, 'middle', [x - w / 2, y + r + gap, x + w / 2, y + r + gap + fs]]
-      ];
-      const hit = (b) => placed.some((q) => !(b[2] < q[0] || b[0] > q[2] || b[3] < q[1] || b[1] > q[3])) ||
+      const w = textW(text, fs), gap = 3.5 * u, x = sp.x, y = sp.y, R = sp.r + gap;
+      const mk = (tx, ty, anchor) => {
+        const bx = anchor === 'start' ? tx : anchor === 'end' ? tx - w : tx - w / 2;
+        return [tx, ty, anchor, [bx, ty - fs * 0.85, bx + w, ty + fs * 0.28]];
+      };
+      const tries = [];
+      [0, 7 * u, 14 * u].forEach((o) => {
+        tries.push(
+          mk(x + R + o, y + fs * 0.33, 'start'), mk(x - R - o, y + fs * 0.33, 'end'),
+          mk(x, y - R - o, 'middle'), mk(x, y + R + o + fs * 0.85, 'middle'),
+          mk(x + R * 0.75 + o, y - R * 0.75 - o, 'start'), mk(x - R * 0.75 - o, y - R * 0.75 - o, 'end'),
+          mk(x + R * 0.75 + o, y + R * 0.75 + o + fs * 0.7, 'start'), mk(x - R * 0.75 - o, y + R * 0.75 + o + fs * 0.7, 'end')
+        );
+      });
+      const blocked = (b) => placed.some((q) => !(b[2] < q[0] || b[0] > q[2] || b[3] < q[1] || b[1] > q[3])) ||
         b[0] < vx || b[2] > vx + vw || b[1] < vy || b[3] > vy + vh;
-      const t = tries.find((c) => !hit(c[3]));
-      if (!t) return;
-      placed.push(t[3]);
-      labelBoxes.push(t[3]);
-      texts += '<text x="' + t[0].toFixed(1) + '" y="' + t[1].toFixed(1) + '" text-anchor="' + t[2] + '" class="stop-label' + (strong ? ' strong' : '') +
+      let pick = null, least = Infinity;
+      for (const c of tries) {
+        if (blocked(c[3])) continue;
+        const h = routeHits(c[3]);
+        if (h === 0) { pick = c; break; }
+        if (h < least) { least = h; pick = c; }
+      }
+      if (!pick) return;
+      placed.push(pick[3]);
+      labelBoxes.push(pick[3]);
+      texts += '<text x="' + pick[0].toFixed(1) + '" y="' + pick[1].toFixed(1) + '" text-anchor="' + pick[2] + '" class="stop-label' + (strong ? ' strong' : '') +
         '" font-size="' + fs.toFixed(1) + '" stroke-width="' + (3.4 * u).toFixed(1) + '">' + esc(text) + '</text>';
     });
 
@@ -270,7 +306,7 @@
       const L = LABEL_PREFS[p.n];
       if (!L) return;
       const hw = textW(L.name, pfs) / 2 + 3 * u;
-      const best = placePrefLabel(p, opts.vb, obs, pfs * 1.6, hw);
+      const best = placePrefLabel(p, opts.vb, obs, pfs * 1.6, hw, pfs * 0.55);
       if (!best || best.d < pfs * 0.4) return;
       obs.boxes.push([best.x - hw, best.y - pfs * 0.8, best.x + hw, best.y + pfs * 0.5]);
       s += '<text x="' + best.x.toFixed(1) + '" y="' + (best.y + pfs * 0.35).toFixed(1) + '" class="pref-label" fill="' + L.color + '" font-size="' + pfs.toFixed(1) + '" letter-spacing="' + (2 * u).toFixed(1) + '">' + L.name + '</text>';
