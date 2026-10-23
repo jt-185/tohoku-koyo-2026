@@ -5,7 +5,7 @@
   const CACHE_KEY = 'tohoku-trip-data';
   const ME_KEY = 'tohoku-trip-me';
   const LOCAL_CHECKS_KEY = 'tohoku-trip-checks';
-  const VIEWS = ['plan', 'stay', 'move', 'spots', 'prep'];
+  const VIEWS = ['plan', 'stay', 'move', 'spots', 'prep', 'suggest'];
 
   const TYPE_COLORS = {
     '航班': 'var(--sky)', '抵達': 'var(--sky)', '交通': 'var(--ink-3)', '景點': 'var(--maple)',
@@ -739,6 +739,80 @@
     renderView();
   }
 
+  // ── 建議頁：家人填想去的景點、網站要改的地方，送到試算表的「💬建議」分頁 ──
+  const SG_TYPES = [
+    ['想去的景點', '想去的地方或店名，例如「想去○○，離行程不遠」'],
+    ['想吃的', '想吃的餐廳或美食，最好寫是哪一天、哪個地區'],
+    ['網站要修改', '哪一頁、哪個地方要改？例如「住宿頁的電話寫錯」'],
+    ['其他', '其他想說的都可以寫在這裡']
+  ];
+  const SG_HISTORY_KEY = 'tohoku-trip-suggestions';
+  let sgDraft = { name: '', type: SG_TYPES[0][0], text: '', link: '' };
+  let sgState = { sending: false, msg: '', ok: false };
+
+  function sgHistory() {
+    try { return JSON.parse(localStorage.getItem(SG_HISTORY_KEY) || '[]'); } catch (e) { return []; }
+  }
+
+  function viewSuggest() {
+    const people = checkPeople();
+    if (!sgDraft.name) {
+      let me = '';
+      try { me = localStorage.getItem(ME_KEY) || ''; } catch (e) { /* ignore */ }
+      if (people.includes(me)) sgDraft.name = me;
+    }
+    const nameChips = people.map((p) => '<button type="button" class="filter' + (p === sgDraft.name ? ' active' : '') + '" data-sg-name="' + esc(p) + '">' + esc(p) + '</button>').join('');
+    const typeChips = SG_TYPES.map((t) => '<button type="button" class="filter' + (t[0] === sgDraft.type ? ' active' : '') + '" data-sg-type="' + esc(t[0]) + '">' + esc(t[0]) + '</button>').join('');
+    const ph = (SG_TYPES.find((t) => t[0] === sgDraft.type) || SG_TYPES[0])[1];
+    const hist = sgHistory().slice(0, 5).map((h) =>
+      '<li><span class="sg-h-type">' + esc(h.type) + '</span><span class="sg-h-text">' + esc(h.text) + '</span><small>' + esc(h.name) + '・' + esc(h.when) + '</small></li>').join('');
+    return '<div class="section-title"><h2>給我們的建議</h2><p>想去哪裡、哪裡要改，都可以說</p></div>' +
+      '<form class="card sg-form" novalidate>' +
+        '<div class="sg-field"><label>你是誰</label><div class="sg-chips names" style="--n:' + people.length + '">' + nameChips + '</div></div>' +
+        '<div class="sg-field"><label>想說的是</label><div class="sg-chips types" style="--n:' + SG_TYPES.length + '">' + typeChips + '</div></div>' +
+        '<div class="sg-field"><label for="sg-text">內容</label>' +
+          '<textarea id="sg-text" rows="5" maxlength="1000" placeholder="' + esc(ph) + '">' + esc(sgDraft.text) + '</textarea></div>' +
+        '<div class="sg-field"><label for="sg-link">連結（選填）</label>' +
+          '<input id="sg-link" type="url" inputmode="url" maxlength="300" placeholder="Google 地圖或網頁連結" value="' + esc(sgDraft.link) + '"></div>' +
+        '<p class="sg-msg' + (sgState.msg ? (sgState.ok ? ' ok' : ' err') : '') + '" id="sg-msg" role="status">' + esc(sgState.msg) + '</p>' +
+        '<button type="submit" class="btn-primary" id="sg-send"' + (sgState.sending ? ' disabled' : '') + '>' + (sgState.sending ? '送出中…' : '送出建議') + '</button>' +
+        '<p class="sg-note">送出後只有 Jaron 看得到，會再看要不要排進行程。</p>' +
+      '</form>' +
+      (hist ? '<h3 class="sub-title">你在這支手機送過的</h3><ul class="sg-history">' + hist + '</ul>' : '');
+  }
+
+  async function sendSuggestion() {
+    if (sgState.sending) return;
+    const text = sgDraft.text.trim();
+    const set = (msg, ok) => { sgState.msg = msg; sgState.ok = !!ok; const el = $('#sg-msg'); if (el) { el.textContent = msg; el.className = 'sg-msg ' + (ok ? 'ok' : 'err'); } };
+    if (!sgDraft.name) return set('請先選一下你是誰', false);
+    if (!text) return set('還沒有寫內容喔', false);
+    if (!CFG.SCRIPT_URL) return set('建議功能還沒啟用，請直接跟 Jaron 說', false);
+    if (sgDraft.link && !/^https?:\/\//i.test(sgDraft.link.trim())) return set('連結要用 http 或 https 開頭，或是留空', false);
+    sgState.sending = true;
+    renderView();
+    try {
+      const res = await fetch(CFG.SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'suggest', name: sgDraft.name, type: sgDraft.type, text: text, link: sgDraft.link.trim() })
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'failed');
+      const d = new Date();
+      const hist = sgHistory();
+      hist.unshift({ name: sgDraft.name, type: sgDraft.type, text: text, when: (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') });
+      try { localStorage.setItem(SG_HISTORY_KEY, JSON.stringify(hist.slice(0, 20))); } catch (e) { /* ignore */ }
+      sgDraft.text = ''; sgDraft.link = '';
+      sgState = { sending: false, msg: '已送出，謝謝你！', ok: true };
+    } catch (err) {
+      // 舊版後台（還沒更新 Apps Script）會回 unknown person
+      const old = String(err.message) === 'unknown person';
+      sgState = { sending: false, msg: old ? '建議功能還在設定中，請先跟 Jaron 說一聲（你寫的內容還在，沒有不見）' : '沒有送成功，請再試一次（你寫的內容還在）', ok: false };
+    }
+    renderView();
+  }
+
   // ── routing ──
   function currentView() {
     const v = location.hash.replace('#', '');
@@ -747,7 +821,7 @@
   function renderView() {
     const v = currentView();
     document.querySelectorAll('.tabs a').forEach((a) => a.classList.toggle('active', a.dataset.view === v));
-    const fn = { plan: viewPlan, stay: viewStay, move: viewMove, spots: viewSpots, prep: viewPrep }[v];
+    const fn = { plan: viewPlan, stay: viewStay, move: viewMove, spots: viewSpots, prep: viewPrep, suggest: viewSuggest }[v];
     galleries = [];
     $('#app').innerHTML = fn();
     hydrateMaps();
@@ -755,10 +829,23 @@
   function renderAll() {
     renderHeader();
     renderFooter();
+    // 建議頁有人正在打字時，資料更新不要重畫整頁
+    if (currentView() === 'suggest' && $('#app').querySelector('.sg-form')) return;
     renderView();
   }
 
+  document.addEventListener('input', (e) => {
+    if (e.target.id === 'sg-text') sgDraft.text = e.target.value;
+    else if (e.target.id === 'sg-link') sgDraft.link = e.target.value;
+  });
+  document.addEventListener('submit', (e) => {
+    if (e.target.classList && e.target.classList.contains('sg-form')) { e.preventDefault(); sendSuggestion(); }
+  });
   document.addEventListener('click', (e) => {
+    const sgName = e.target.closest('[data-sg-name]');
+    if (sgName) { sgDraft.name = sgName.dataset.sgName; sgState.msg = ''; renderView(); return; }
+    const sgType = e.target.closest('[data-sg-type]');
+    if (sgType) { sgDraft.type = sgType.dataset.sgType; sgState.msg = ''; renderView(); return; }
     const lbBtn = e.target.closest('[data-lb]');
     if (lbBtn) {
       const act = lbBtn.dataset.lb;

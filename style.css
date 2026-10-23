@@ -71,7 +71,7 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 700; margin: 0; letter-spac
 /* ── Tabs ── */
 .tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-template-columns: repeat(6, 1fr);
   background: rgba(255, 253, 248, .94); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom);
@@ -537,3 +537,34 @@ main { max-width: 760px; margin: 0 auto; padding: 26px 16px 40px; }
   .person .box svg { width: 8px; height: 8px; }
   .who .filter { font-size: 12px; }
 }
+
+/* 建議頁 */
+.sg-form { display: grid; gap: 16px; }
+.sg-field label { display: block; margin-bottom: 7px; font-size: 13px; font-weight: 500; letter-spacing: .06em; color: var(--ink-3); }
+.sg-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.sg-field textarea, .sg-field input {
+  width: 100%; padding: 11px 13px; border: 1px solid var(--line); border-radius: 12px; background: #fffefb;
+  font: 400 16px/1.6 var(--sans); color: var(--ink); resize: vertical;
+}
+.sg-field textarea:focus, .sg-field input:focus { outline: 2px solid rgba(185, 131, 43, .45); outline-offset: 1px; border-color: transparent; }
+.sg-msg { margin: -4px 0 0; min-height: 1.4em; font-size: 13.5px; }
+.sg-msg.ok { color: var(--moss); }
+.sg-msg.err { color: var(--maple); }
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; padding: 11px 20px; border: 0; border-radius: 999px; cursor: pointer;
+  background: linear-gradient(180deg, #c4503a, #a8342a); color: #fff; font: 700 15px var(--sans); letter-spacing: .08em;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .25) inset, 0 3px 8px rgba(168, 52, 42, .3);
+}
+.btn-primary:active { transform: translateY(1px); box-shadow: none; }
+.btn-primary:disabled { opacity: .6; cursor: default; }
+.sg-note { margin: -6px 0 0; font-size: 12.5px; color: var(--ink-3); }
+.sg-history { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.sg-history li { display: grid; gap: 2px; padding: 10px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; font-size: 14px; }
+.sg-h-type { font-size: 11.5px; font-weight: 500; letter-spacing: .08em; color: var(--maple); }
+.sg-h-text { white-space: pre-wrap; word-break: break-word; }
+.sg-history small { color: var(--ink-3); font-size: 12px; }
+@media (max-width: 380px) { .tabs a { font-size: 10.5px; } .tabs svg { width: 21px; height: 21px; } }
+
+.sg-chips.names, .sg-chips.types { display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); gap: 6px; }
+.sg-chips .filter { padding: 6px 4px; text-align: center; white-space: nowrap; }
+@media (min-width: 820px) { .sg-chips.names { grid-template-columns: repeat(var(--n, 5), minmax(0, 110px)); } .sg-chips.types { grid-template-columns: repeat(var(--n, 4), minmax(0, 130px)); } }
