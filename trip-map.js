@@ -15,7 +15,7 @@
     '栃木県': { at: [370, 1165], color: '#5a7a45', name: '栃木縣' }
   };
   const SEA = '#e2eaec';
-  const ROUTE_KEY = 'tohoku-route2:';
+  const ROUTE_KEY = 'tohoku-route3:';
 
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const color = (n) => DAY_COLORS[(n - 1) % DAY_COLORS.length];
@@ -34,10 +34,12 @@
     while (stack.length) {
       const [a, b] = stack.pop();
       const [ax, ay] = pts[a], [bx, by] = pts[b];
-      const len = Math.hypot(bx - ax, by - ay) || 1e-9;
+      const len = Math.hypot(bx - ax, by - ay);
       let max = 0, idx = -1;
       for (let i = a + 1; i < b; i++) {
-        const d = Math.abs((bx - ax) * (ay - pts[i][1]) - (ax - pts[i][0]) * (by - ay)) / len;
+        // 起終點重疊（繞一圈回原地）時改用到起點的距離
+        const d = len ? Math.abs((bx - ax) * (ay - pts[i][1]) - (ax - pts[i][0]) * (by - ay)) / len
+          : Math.hypot(pts[i][0] - ax, pts[i][1] - ay);
         if (d > max) { max = d; idx = i; }
       }
       if (max > tol && idx > 0) { keep[idx] = 1; stack.push([a, idx], [idx, b]); }
@@ -54,6 +56,7 @@
   function cachedRoute(lls) {
     const k = routeKey(lls);
     if (memo[k]) return memo[k];
+    if (window.ROUTE_CACHE && window.ROUTE_CACHE[k]) return (memo[k] = window.ROUTE_CACHE[k]);
     try {
       const v = JSON.parse(localStorage.getItem(ROUTE_KEY + k) || 'null');
       if (v) return (memo[k] = v);
