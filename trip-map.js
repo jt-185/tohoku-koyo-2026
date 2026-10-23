@@ -146,21 +146,30 @@
     const dx = Math.max(b[0] - x, 0, x - b[2]), dy = Math.max(b[1] - y, 0, y - b[3]);
     return Math.hypot(dx, dy);
   }
-  function placePrefLabel(pref, vb, obs, cap) {
+  function placePrefLabel(pref, vb, obs, cap, hw) {
     const [vx, vy, vw, vh] = vb;
     const rings = ringsOf(pref);
     const [cx, cy] = pref.c;
     const cols = 30, rowsN = 24;
+    const offs = [-hw, -hw / 2, 0, hw / 2, hw];
     let best = null;
     for (let i = 0; i < cols; i++) {
       for (let j = 0; j < rowsN; j++) {
         const x = vx + ((i + 0.5) / cols) * vw, y = vy + ((j + 0.5) / rowsN) * vh;
         const ring = rings.find((r) => inRing(x, y, r));
         if (!ring) continue;
-        let d = Math.min(ringEdgeDist(x, y, ring), x - vx, vx + vw - x, y - vy, vy + vh - y);
-        for (const sg of obs.segs) { d = Math.min(d, distSeg(x, y, sg[0], sg[1], sg[2], sg[3])); if (d <= 0) break; }
-        for (const c of obs.circles) d = Math.min(d, Math.hypot(x - c[0], y - c[1]) - c[2]);
-        for (const b of obs.boxes) d = Math.min(d, boxDist(x, y, b));
+        // 文字有一定寬度：沿著文字的橫向取 5 個點，每一點都要在縣內、離路線和地點夠遠
+        let d = Math.min(x - hw - vx, vx + vw - (x + hw), y - vy, vy + vh - y);
+        for (const o of offs) {
+          const px = x + o;
+          if (!inRing(px, y, ring)) { d = 0; break; }
+          d = Math.min(d, ringEdgeDist(px, y, ring));
+          for (const sg of obs.segs) { d = Math.min(d, distSeg(px, y, sg[0], sg[1], sg[2], sg[3])); if (d <= 0) break; }
+          for (const c of obs.circles) d = Math.min(d, Math.hypot(px - c[0], y - c[1]) - c[2]);
+          for (const bx of obs.boxes) d = Math.min(d, boxDist(px, y, bx));
+          if (d <= 0) break;
+        }
+        if (d <= 0) continue;
         const score = Math.min(d, cap) - 0.01 * Math.hypot(x - cx, y - cy) * (cap / 100);
         if (!best || score > best.score) best = { x: x, y: y, d: d, score: score };
       }
@@ -260,8 +269,10 @@
     m.prefs.forEach((p) => {
       const L = LABEL_PREFS[p.n];
       if (!L) return;
-      const best = placePrefLabel(p, opts.vb, obs, pfs * 1.6);
-      if (!best || best.d < pfs * 0.55) return;
+      const hw = textW(L.name, pfs) / 2 + 3 * u;
+      const best = placePrefLabel(p, opts.vb, obs, pfs * 1.6, hw);
+      if (!best || best.d < pfs * 0.4) return;
+      obs.boxes.push([best.x - hw, best.y - pfs * 0.8, best.x + hw, best.y + pfs * 0.5]);
       s += '<text x="' + best.x.toFixed(1) + '" y="' + (best.y + pfs * 0.35).toFixed(1) + '" class="pref-label" fill="' + L.color + '" font-size="' + pfs.toFixed(1) + '" letter-spacing="' + (2 * u).toFixed(1) + '">' + L.name + '</text>';
     });
 
@@ -289,7 +300,7 @@
       const p = sp.p, d = sp.d;
       if (numbered) {
         dots += circle(sp.x, sp.y, sp.r, p.start ? '#2b2622' : color(d.n), '#fff', 2 * u);
-        const num = p.start ? '起' : String(d.pts[0].start ? sp.i : sp.i + 1);
+        const num = p.start ? '起' : p.end ? '終' : String(d.pts[0].start ? sp.i : sp.i + 1);
         dots += '<text x="' + sp.x.toFixed(1) + '" y="' + (sp.y + 3.6 * u).toFixed(1) + '" class="pin-num" font-size="' + (10 * u).toFixed(1) + '">' + num + '</text>';
       } else {
         dots += circle(sp.x, sp.y, sp.r, p.stay ? color(d.n) : '#fffdf8', p.stay ? '#fff' : color(d.n), (p.stay ? 1.6 : 1.8) * u);

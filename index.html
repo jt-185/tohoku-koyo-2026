@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Shippori+Mincho:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=21">
+  <link rel="stylesheet" href="style.css?v=26">
 </head>
 <body>
   <header class="hero">
@@ -59,10 +59,20 @@
     <button class="lb-nav lb-next" data-lb="next" aria-label="下一張">›</button>
   </div>
 
-  <script src="tohoku-map.js?v=21"></script>
-  <script src="routes-cache.js?v=21"></script>
-  <script src="trip-map.js?v=21"></script>
-  <script src="config.js?v=21"></script>
-  <script src="app.js?v=21"></script>
+  <div class="route-modal" id="route-modal" hidden role="dialog" aria-modal="true" aria-label="路線圖">
+    <div class="rm-card">
+      <button class="rm-close" data-rm="close" aria-label="關閉">×</button>
+      <h3 id="rm-title"></h3>
+      <div class="rm-tags" id="rm-tags"></div>
+      <div class="rm-map" id="rm-map"></div>
+      <a class="btn rm-nav" id="rm-nav" href="#" target="_blank" rel="noopener">用 Google 地圖導航</a>
+    </div>
+  </div>
+
+  <script src="tohoku-map.js?v=26"></script>
+  <script src="routes-cache.js?v=26"></script>
+  <script src="trip-map.js?v=26"></script>
+  <script src="config.js?v=26"></script>
+  <script src="app.js?v=26"></script>
 </body>
 </html>
