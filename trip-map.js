@@ -203,7 +203,6 @@
     const u = vw / 400;
     const focus = opts.focus || 0;
     const numbered = !!(focus && opts.numbers);
-    const FZ = window.TRIP_FS || 1; // 使用者調整字體大小時，地圖上的地名也跟著放大
 
     // 1) 每個點的位置：單日模式下靠太近的點拉開一點，避免圓圈和名字疊在一起
     const spots = [];
@@ -261,7 +260,7 @@
       if (sp.kind === 'alt') { if (!focus) return; text = sp.p.label + '（可選擇）'; strong = false; }
       else if (numbered) { text = sp.p.label; strong = true; }
       else if (sp.p.stay || focus) { text = sp.p.label; strong = !!sp.p.stay; } else return;
-      const fs = (strong ? 12 : 11) * u * FZ;
+      const fs = (strong ? 12 : 11) * u;
       const w = textW(text, fs), gap = 3.5 * u, x = sp.x, y = sp.y, R = sp.r + gap;
       const mk = (tx, ty, anchor) => {
         const bx = anchor === 'start' ? tx : anchor === 'end' ? tx - w : tx - w / 2;
@@ -320,7 +319,7 @@
       for (let i = 1; i < rt.xy.length; i++) obs.segs.push([rt.xy[i - 1][0], rt.xy[i - 1][1], rt.xy[i][0], rt.xy[i][1]]);
     });
     spots.forEach((sp) => { if (sp.kind !== 'grey') obs.circles.push([sp.x, sp.y, sp.r + 2 * u]); });
-    const pfs = 17 * u * FZ;
+    const pfs = 17 * u;
     m.prefs.forEach((p) => {
       const L = LABEL_PREFS[p.n];
       if (!L) return;

@@ -5,7 +5,6 @@
   const CACHE_KEY = 'tohoku-trip-data';
   const ME_KEY = 'tohoku-trip-me';
   const LOCAL_CHECKS_KEY = 'tohoku-trip-checks';
-  const TEXT_SCALE = { '1': 1, lg: 1.2, xl: 1.4 };
   const VIEWS = ['plan', 'stay', 'move', 'spots', 'prep', 'suggest'];
 
   const TYPE_COLORS = {
@@ -962,22 +961,6 @@
     new ResizeObserver(setFall).observe(hero);
   }
   initLeaves();
-
-  // ── 字體大小 ──
-  function currentTextSize() { return document.documentElement.dataset.text || '1'; }
-  function applyTextSize(v, rerender) {
-    if (v === '1') delete document.documentElement.dataset.text; else document.documentElement.dataset.text = v;
-    window.TRIP_FS = TEXT_SCALE[v] || 1;
-    document.querySelectorAll('.text-size button').forEach((b) => b.classList.toggle('active', b.dataset.ts === v));
-    if (rerender && data) renderView();
-  }
-  document.addEventListener('click', (e) => {
-    const b = e.target.closest('[data-ts]');
-    if (!b) return;
-    try { localStorage.setItem('tohoku-text-size', b.dataset.ts); } catch (err) { /* ignore */ }
-    applyTextSize(b.dataset.ts, true);
-  });
-  applyTextSize(currentTextSize(), false);
 
   load();
 })();
