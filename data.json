@@ -1,6 +1,6 @@
 {
  "ok": true,
- "updated": "2026-10-23T19:52:29.550Z",
+ "updated": "2026-10-23T20:01:02.382Z",
  "sheets": {
   "設定": [
    [
@@ -855,7 +855,7 @@
    ],
    [
     "4",
-    "塔のへつり",
+    "塔崖",
     "塔のへつり",
     "福島・下郷",
     "紅葉",
@@ -869,7 +869,7 @@
    ],
    [
     "4",
-    "鶴ヶ城",
+    "鶴城公園",
     "鶴ヶ城",
     "福島・會津若松",
     "景點",
@@ -879,7 +879,7 @@
     "收費停車場",
     "會津若松的城，紅瓦天守閣，城內是鄉土博物館。",
     "可選擇",
-    "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/Tsuruga-jo_castle_%2837807740366%29.jpg/1280px-Tsuruga-jo_castle_%2837807740366%29.jpg | 鶴ヶ城天守閣｜攝影：Raita Futo from Tokyo, Japan（CC BY 2.0，Wikimedia Commons）\nhttps://thumb.wikimedia.org/wikipedia/commons/thumb/0/07/Aizuwakamatsu_Castle_ac_%283%29.jpg/1280px-Aizuwakamatsu_Castle_ac_%283%29.jpg | 鶴ヶ城｜攝影：Asturio Cantabrio（CC BY-SA 4.0，Wikimedia Commons）"
+    "photos/tsuruga-1.jpg | 鶴ヶ城天守閣\nphotos/tsuruga-2.jpg | 鶴ヶ城 紅葉"
    ]
   ],
   "清單": [
@@ -919,7 +919,7 @@
    [
     "證件",
     "台灣駕照＋日文譯本",
-    "要開車的人才需要；取車時跟護照一起出示",
+    "要開車的人才需要(Jaron)",
     "",
     "FALSE",
     "FALSE",
@@ -929,8 +929,8 @@
    ],
    [
     "網路",
-    "eSIM 買好並安裝",
-    "每人一張，到日本再開啟數據漫遊",
+    "eSIM / 漫遊",
+    "購買eSIM或是電信漫遊",
     "",
     "FALSE",
     "FALSE",
@@ -941,18 +941,7 @@
    [
     "保險",
     "旅平險＋不便險",
-    "",
-    "",
-    "TRUE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "行李",
-    "行李秤重",
-    "託運 ≤23kg、手提 ≤7kg；去程 1 件、回程 2 件",
+    "出事有錢拿",
     "",
     "FALSE",
     "FALSE",
@@ -963,7 +952,7 @@
    [
     "行李",
     "保暖衣物",
-    "東北 11 月早晚很冷，帶厚外套、圍巾",
+    "東北11月早晚會冷，防寒外套及圍巾(Bornan)",
     "",
     "FALSE",
     "FALSE",
@@ -985,8 +974,8 @@
    [
     "手機",
     "下載 Google 離線地圖",
-    "山區訊號可能不好",
-    "https://support.google.com/maps/answer/6291838?hl=zh-Hant",
+    "可先下載當地地圖，收訊不好時使用",
+    "",
     "FALSE",
     "FALSE",
     "FALSE",
