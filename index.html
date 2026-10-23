@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>東北賞楓自駕 2026</title>
+  <meta name="description" content="2026/11/1–11/7 東北紅葉自駕：行程、住宿、交通、景點與出發準備。">
+  <meta name="theme-color" content="#f6f1e7">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍁</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Shippori+Mincho:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hero">
+    <svg class="leaf leaf-a" viewBox="0 0 100 100" aria-hidden="true"><use href="#maple"/></svg>
+    <svg class="leaf leaf-b" viewBox="0 0 100 100" aria-hidden="true"><use href="#maple"/></svg>
+    <svg class="leaf leaf-c" viewBox="0 0 100 100" aria-hidden="true"><use href="#maple"/></svg>
+    <div class="hero-inner">
+      <p class="kicker">2026 秋 ・ TOHOKU</p>
+      <h1 id="title">東北賞楓自駕</h1>
+      <p class="subtitle" id="subtitle"></p>
+      <p class="meta" id="meta"></p>
+      <p class="countdown" id="countdown"></p>
+      <p class="notice" id="notice" hidden></p>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="主選單">
+    <a href="#plan" data-view="plan"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>行程</span></a>
+    <a href="#stay" data-view="stay"><svg viewBox="0 0 24 24"><path d="M3 18V8M3 14h18v4M21 14v-2a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11" r="1.6"/></svg><span>住宿</span></a>
+    <a href="#move" data-view="move"><svg viewBox="0 0 24 24"><path d="M5 16V11l2-4h10l2 4v5M5 16h14M5 16v2M19 16v2M5 11h14"/><circle cx="8" cy="13.5" r=".8"/><circle cx="16" cy="13.5" r=".8"/></svg><span>交通</span></a>
+    <a href="#spots" data-view="spots"><svg viewBox="0 0 24 24"><path d="M12 21v-6M12 3l1.6 4.2L17 5.5l-.8 4.3 4.3.2-3.6 2.8 1.6 1.7-6.5-.5-6.5.5 1.6-1.7L3.5 10l4.3-.2L7 5.5l3.4 1.7z"/></svg><span>景點</span></a>
+    <a href="#prep" data-view="prep"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12.2l2.4 2.4 4.8-5"/></svg><span>準備</span></a>
+  </nav>
+
+  <main id="app">
+    <p class="loading">載入中…</p>
+  </main>
+
+  <footer class="footer">
+    <p id="sync"></p>
+    <p><a id="edit-link" href="#" target="_blank" rel="noopener">編輯資料（Google 試算表）</a></p>
+  </footer>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="maple" viewBox="0 0 100 100">
+      <path d="M50 4 58 28 74 17 69 39 94 36 79 53 88 61 61 63 65 84 52 71 50 96 48 71 35 84 39 63 12 61 21 53 6 36 31 39 26 17 42 28Z"/>
+    </symbol>
+  </svg>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
