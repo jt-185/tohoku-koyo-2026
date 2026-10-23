@@ -60,8 +60,8 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 700; margin: 0; letter-spac
 .countdown:empty { display: none; }
 .countdown b { font-family: var(--serif); font-size: 22px; line-height: 1; color: #f2b48f; }
 .notice {
-  margin: 16px 0 0; padding: 10px 14px; border-left: 3px solid var(--maple);
-  background: rgba(255, 253, 248, .7); border-radius: 0 8px 8px 0; font-size: 14px; color: var(--ink-2);
+  margin: 12px 0 0; padding: 4px 12px; border-left: 3px solid var(--maple);
+  background: rgba(255, 253, 248, .7); border-radius: 0 6px 6px 0; font-size: 13px; line-height: 1.5; color: var(--ink-2);
 }
 .leaf { position: absolute; fill: var(--maple); opacity: .9; }
 .leaf-a { width: 104px; right: -22px; top: 8px; transform: rotate(18deg); opacity: .85; }
