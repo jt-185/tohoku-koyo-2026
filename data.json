@@ -1,6 +1,6 @@
 {
  "ok": true,
- "updated": "2026-10-23T18:32:25.802Z",
+ "updated": "2026-10-23T19:52:29.550Z",
  "sheets": {
   "設定": [
    [
@@ -33,7 +33,7 @@
    ],
    [
     "公告",
-    "行程還在微調，以這個網頁為準。"
+    "行程隨時微調，網站為參考。"
    ]
   ],
   "每日": [
@@ -52,7 +52,7 @@
     "11/1",
     "日",
     "抵達仙台・鳴子溫泉",
-    "桃園 → 仙台機場 → 鳴子溫泉",
+    "桃機 → 仙台機場 → 鳴子溫泉",
     "湯元 吉祥",
     "機場 → 鳴子 約 1.5–2 小時",
     "晚上在旅館吃自助晚餐、泡湯"
@@ -65,17 +65,17 @@
     "鳴子峽 → 銀山溫泉 → 山形市",
     "山形站前大和 Roynet",
     "鳴子 → 銀山 約 2–2.5 小時；銀山 → 山形 約 1–1.5 小時",
-    "鳴子峽一早去人最少；銀山溫泉平日散步"
+    "鳴子峽賞紅葉；銀山溫泉逛逛"
    ],
    [
     "3",
     "11/3",
     "二",
     "山寺・蘆之牧溫泉",
-    "山形市 → 山寺 → 蘆之牧溫泉",
+    "山形市 → 山寺 → 福島-蘆之牧溫泉",
     "丸峰庵",
     "山形 → 山寺 約 30 分；山寺 → 蘆之牧 約 3 小時",
-    "文化之日（日本假日），山寺要早到"
+    "文化之日（日本假日），山寺一堆階梯"
    ],
    [
     "4",
@@ -92,7 +92,7 @@
     "11/5",
     "四",
     "日光一日",
-    "別墅 → 龍王峽／東照宮 → 別墅",
+    "住宿 → 龍王峽／東照宮 → 住宿",
     "Rakuten STAY VILLA 日光",
     "依景點而定",
     "去哪幾個景點當天看紅葉狀況決定"
@@ -105,17 +105,17 @@
     "日光 → 仙台",
     "Hotel Metropolitan Sendai East",
     "日光 → 仙台 約 3.5–4 小時",
-    "下午入住，晚上逛仙台市區"
+    "入住後用餐、晚上逛仙台市區"
    ],
    [
     "7",
     "11/7",
     "六",
     "秋保大滝・返台",
-    "仙台 → 秋保大滝 → 仙台機場 → 桃園",
+    "仙台 → 秋保大滝 → 仙台機場 → 台灣",
     "",
     "仙台 → 秋保 約 40 分；秋保 → 機場 約 40 分",
-    "14:30 前還車，記得先加滿油"
+    "14:30 前還車，須在機場退稅"
    ]
   ],
   "行程": [
@@ -321,8 +321,8 @@
    ],
    [
     "5",
-    "備案",
-    "備案",
+    "可選擇",
+    "可選擇",
     "奧日光：中禪寺湖、華嚴瀑布",
     "紅葉預測 10/27，可能已經過了；當天看狀況",
     "華厳滝",
@@ -808,7 +808,7 @@
     "瀑布觀景台電梯付費",
     "有",
     "沿いろは坂上奧日光，華嚴瀑布落差 97 公尺；這次去時紅葉可能已經過了。",
-    "備案",
+    "可選擇",
     "photos/chuzenji-1.jpg | 中禪寺湖\nhttps://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/%E7%B4%85%E8%91%89%E3%81%AE%E8%8F%AF%E5%8E%B3%E3%81%AE%E6%BB%9D.jpg/1280px-%E7%B4%85%E8%91%89%E3%81%AE%E8%8F%AF%E5%8E%B3%E3%81%AE%E6%BB%9D.jpg | 紅葉的華嚴瀑布｜攝影：くろふね（CC BY-SA 4.0，Wikimedia Commons）\nhttps://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/Okunikko_-_Okunikko7887.jpg/1280px-Okunikko_-_Okunikko7887.jpg | 攝影：lumoplank（CC0，Wikimedia Commons）"
    ],
    [
@@ -836,7 +836,7 @@
     "¥300",
     "免費",
     "鳴子溫泉街上的木造公共浴場，有上千年歷史的湯治場。",
-    "備案",
+    "可選擇",
     ""
    ],
    [
@@ -850,7 +850,7 @@
     "¥660",
     "",
     "鳴子溫泉的公共浴場，2024 年 11 月重新開幕。",
-    "備案",
+    "可選擇",
     ""
    ],
    [
@@ -864,8 +864,8 @@
     "免費",
     "約 80 台",
     "河水侵蝕出的奇岩，走吊橋到對岸近看；離大內宿約 25 分鐘。",
-    "備案",
-    ""
+    "可選擇",
+    "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d1/%E7%A7%8B%E3%81%AE%E5%A1%94%E3%81%AE%E3%81%B8%E3%81%A4%E3%82%8A20201031-IMG_0543.jpg/1280px-%E7%A7%8B%E3%81%AE%E5%A1%94%E3%81%AE%E3%81%B8%E3%81%A4%E3%82%8A20201031-IMG_0543.jpg | 秋天的塔のへつり｜攝影：くろふね（CC BY 4.0，Wikimedia Commons）\nhttps://thumb.wikimedia.org/wikipedia/commons/thumb/6/68/To-no-Hetsuri%2C_Fukushima_05.jpg/1280px-To-no-Hetsuri%2C_Fukushima_05.jpg | 塔のへつり的吊橋｜攝影：Σ64（CC BY 3.0，Wikimedia Commons）"
    ],
    [
     "4",
@@ -878,8 +878,8 @@
     "天守閣 ¥410",
     "收費停車場",
     "會津若松的城，紅瓦天守閣，城內是鄉土博物館。",
-    "備案",
-    ""
+    "可選擇",
+    "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/Tsuruga-jo_castle_%2837807740366%29.jpg/1280px-Tsuruga-jo_castle_%2837807740366%29.jpg | 鶴ヶ城天守閣｜攝影：Raita Futo from Tokyo, Japan（CC BY 2.0，Wikimedia Commons）\nhttps://thumb.wikimedia.org/wikipedia/commons/thumb/0/07/Aizuwakamatsu_Castle_ac_%283%29.jpg/1280px-Aizuwakamatsu_Castle_ac_%283%29.jpg | 鶴ヶ城｜攝影：Asturio Cantabrio（CC BY-SA 4.0，Wikimedia Commons）"
    ]
   ],
   "清單": [
@@ -943,7 +943,7 @@
     "旅平險＋不便險",
     "",
     "",
-    "FALSE",
+    "TRUE",
     "FALSE",
     "FALSE",
     "FALSE",
@@ -987,303 +987,6 @@
     "下載 Google 離線地圖",
     "山區訊號可能不好",
     "https://support.google.com/maps/answer/6291838?hl=zh-Hant",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE",
-    "FALSE"
-   ],
-   [
-    "",
-    "",
-    "",
-    "",
     "FALSE",
     "FALSE",
     "FALSE",

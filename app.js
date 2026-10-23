@@ -9,7 +9,7 @@
 
   const TYPE_COLORS = {
     '航班': 'var(--sky)', '抵達': 'var(--sky)', '交通': 'var(--ink-3)', '景點': 'var(--maple)',
-    '溫泉': 'var(--gold)', '用餐': 'var(--gold)', '住宿': 'var(--moss)', '備案': 'var(--ink-3)'
+    '溫泉': 'var(--gold)', '用餐': 'var(--gold)', '住宿': 'var(--moss)', '備案': 'var(--ink-3)', '可選擇': 'var(--ink-3)'
   };
 
   const ICON = {
@@ -32,6 +32,9 @@
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const txt = (s) => esc(s).replace(/\n/g, '<br>');
   const safeUrl = (u) => (/^(https?:|tel:)/i.test(String(u || '').trim()) ? String(u).trim() : '');
+  // 「可選擇」：不一定要去、看當天狀況決定的景點（試算表裡寫「可選擇」或舊的「備案」都可以）
+  const OPTIONAL = '可選擇';
+  const isOptional = (v) => v === OPTIONAL || v === '備案';
   const mapUrl = (q) => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
   // 沒給起點時 Google 地圖會用手機目前位置當起點
   const navUrl = (q) => 'https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=' + encodeURIComponent(q);
@@ -229,7 +232,7 @@
         : '';
       const spot = type !== '交通' && spots.find((s) => (s['日文'] && s['日文'] === it['地圖']) || (s['名稱'] && it['項目'].indexOf(s['名稱']) >= 0));
       const thumb = spot ? coverHtml(spot['名稱'], parseImages(spot['圖片']), 'thumb') : '';
-      return '<li class="tl' + (type === '備案' ? ' is-alt' : '') + '" style="--c:' + color + '">' +
+      return '<li class="tl' + (isOptional(type) ? ' is-alt' : '') + '" style="--c:' + color + '">' +
         '<div class="tl-time">' + esc(it['時間']) + '</div>' +
         '<div class="tl-rail"><span class="tl-dot"></span></div>' +
         '<div class="tl-body"><div class="tl-main"><div class="tl-type">' + esc(type) + '</div>' +
@@ -277,7 +280,7 @@
   let ovOpen = true;
   try { ovOpen = localStorage.getItem('tohoku-ov-open') !== '0'; } catch (e) { /* ignore */ }
 
-  // 起點是前一晚的住宿，接著是當天有座標的地點（備案另外標示，不連線）
+  // 起點是前一晚的住宿，接著是當天有座標的地點（可選擇的另外標示，不連線）
   function dayPoints(n) {
     const items = rows('行程');
     const pts = [], alts = [];
@@ -293,7 +296,7 @@
     items.filter((it) => Number(it['Day']) === n).forEach((it) => {
       if (!parseLatLng(it['座標'])) return;
       const pt = toPt(it);
-      if (it['類型'] === '備案') { alts.push(pt); return; }
+      if (isOptional(it['類型'])) { alts.push(pt); return; }
       const last = pts[pts.length - 1];
       if (last && last.ll[0] === pt.ll[0] && last.ll[1] === pt.ll[1]) return;
       pts.push(pt);
@@ -540,17 +543,17 @@
 
   function viewSpots() {
     const all = rows('景點');
-    const tabs = ['全部', '行程', '備案'];
+    const tabs = ['全部', '行程', OPTIONAL];
     const list = all
-      .filter((s) => spotFilter === '全部' || s['狀態'] === spotFilter)
-      .sort((a, b) => (a['狀態'] === b['狀態'] ? 0 : a['狀態'] === '行程' ? -1 : 1) || Number(a['Day']) - Number(b['Day']));
+      .filter((s) => spotFilter === '全部' || (spotFilter === OPTIONAL ? isOptional(s['狀態']) : s['狀態'] === spotFilter))
+      .sort((a, b) => (isOptional(a['狀態']) - isOptional(b['狀態'])) || Number(a['Day']) - Number(b['Day']));
     const cards = list.map((s) => {
       const facts = [['開放', s['開放時間']], ['費用', s['費用']], ['停車', s['停車']]]
         .filter(([, v]) => v).map(([k, v]) => '<span><b>' + k + '</b>' + esc(v) + '</span>').join('');
       const koyo = s['紅葉見頃'] ? '<span class="badge maple">🍁 ' + esc(s['紅葉見頃']) + '</span>' : '';
-      return '<article class="card spot' + (s['狀態'] === '備案' ? ' is-alt' : '') + '">' + coverHtml(s['名稱'], parseImages(s['圖片'])) +
+      return '<article class="card spot' + (isOptional(s['狀態']) ? ' is-alt' : '') + '">' + coverHtml(s['名稱'], parseImages(s['圖片'])) +
         '<div class="spot-head"><div><h3>' + esc(s['名稱']) + '</h3>' +
-        '<div class="where">Day ' + esc(s['Day']) + '・' + esc(s['地區']) + (s['狀態'] === '備案' ? '・備案' : '') + '</div></div>' + koyo + '</div>' +
+        '<div class="where">Day ' + esc(s['Day']) + '・' + esc(s['地區']) + (isOptional(s['狀態']) ? '・' + OPTIONAL : '') + '</div></div>' + koyo + '</div>' +
         (s['介紹'] ? '<p class="desc">' + txt(s['介紹']) + '</p>' : '') +
         (facts ? '<div class="facts">' + facts + '</div>' : '') +
         '<div class="btn-row"><a class="btn" href="' + esc(mapUrl(s['日文'] || s['名稱'])) + '" target="_blank" rel="noopener">' + ICON.map + '地圖</a>' +

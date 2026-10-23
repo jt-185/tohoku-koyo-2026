@@ -224,7 +224,7 @@
     spots.forEach((sp) => {
       if (sp.kind === 'grey') return;
       let text, strong;
-      if (sp.kind === 'alt') { if (!focus) return; text = sp.p.label + '（備案）'; strong = false; }
+      if (sp.kind === 'alt') { if (!focus) return; text = sp.p.label + '（可選擇）'; strong = false; }
       else if (numbered) { text = sp.p.label; strong = true; }
       else if (sp.p.stay || focus) { text = sp.p.label; strong = !!sp.p.stay; } else return;
       const fs = (strong ? 12 : 11) * u;
