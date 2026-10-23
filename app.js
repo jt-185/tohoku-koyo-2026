@@ -537,7 +537,7 @@
     return '<div class="section-title"><h2>航班</h2><p>星宇航空</p></div>' +
       '<div class="stack">' + flight('去程') + flight('回程') + '</div>' +
       (car ? '<h3 class="sub-title">租車</h3><article class="card">' + carCover + '<dl class="kv">' + car + '</dl></article>' : '') +
-      (drive ? '<h3 class="sub-title">開車時間（粗估）</h3><p class="hint">點一段路線，Google 地圖會從你目前的位置導航到目的地。</p>' +
+      (drive ? '<h3 class="sub-title">開車時間（Google 地圖）</h3><p class="hint">點一段路線，Google 地圖會從你目前的位置導航到目的地。</p>' +
         '<article class="card"><ul class="drive-list">' + drive + '</ul></article>' : '');
   }
 
