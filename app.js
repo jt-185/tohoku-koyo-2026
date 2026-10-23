@@ -39,7 +39,8 @@
     if (!grid.length) return [];
     const head = grid[0].map((h) => String(h).trim());
     return grid.slice(1)
-      .filter((r) => r.some((c) => String(c).trim() !== ''))
+      // 勾選欄空白時也會顯示 FALSE，所以只看其他欄位有沒有內容
+      .filter((r) => r.some((c) => !/^(|TRUE|FALSE)$/.test(String(c).trim())))
       .map((r) => Object.fromEntries(head.map((h, i) => [h, String(r[i] == null ? '' : r[i]).trim()])));
   }
   function settings() {
