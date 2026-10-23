@@ -10,7 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Shippori+Mincho:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
   <header class="hero">
@@ -50,7 +51,18 @@
     </symbol>
   </svg>
 
-  <script src="config.js?v=2"></script>
-  <script src="app.js?v=2"></script>
+  <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="照片">
+    <button class="lb-close" data-lb="close" aria-label="關閉">×</button>
+    <button class="lb-nav lb-prev" data-lb="prev" aria-label="上一張">‹</button>
+    <figure class="lb-figure">
+      <img id="lb-img" alt="">
+      <figcaption><b id="lb-title"></b><span id="lb-count"></span><small id="lb-caption"></small></figcaption>
+    </figure>
+    <button class="lb-nav lb-next" data-lb="next" aria-label="下一張">›</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="config.js?v=3"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>

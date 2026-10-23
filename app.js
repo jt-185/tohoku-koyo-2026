@@ -33,6 +33,35 @@
   const txt = (s) => esc(s).replace(/\n/g, '<br>');
   const safeUrl = (u) => (/^(https?:|tel:)/i.test(String(u || '').trim()) ? String(u).trim() : '');
   const mapUrl = (q) => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+  // 沒給起點時 Google 地圖會用手機目前位置當起點
+  const navUrl = (q) => 'https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=' + encodeURIComponent(q);
+
+  function parseLatLng(s) {
+    const m = String(s || '').match(/(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/);
+    return m ? [Number(m[1]), Number(m[2])] : null;
+  }
+
+  // 圖片格：一行一張，「網址 | 說明」。支援一般圖片網址和 Google 雲端硬碟的分享連結
+  function parseImages(text) {
+    return String(text || '').split('\n').map((line) => {
+      const [url, ...rest] = line.split('|');
+      let src = safeUrl(url);
+      if (!/^https:/i.test(src)) return null;
+      const drive = src.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]+)/);
+      if (drive) src = 'https://drive.google.com/thumbnail?id=' + drive[1] + '&sz=w1600';
+      const thumb = drive ? src.replace('sz=w1600', 'sz=w600') : src.replace('/1280px-', '/500px-');
+      return { src: src, thumb: thumb, caption: rest.join('|').trim() };
+    }).filter(Boolean);
+  }
+
+  let galleries = [];
+  function coverHtml(title, imgs, cls) {
+    if (!imgs.length) return '';
+    galleries.push({ title: title, imgs: imgs });
+    return '<button class="' + (cls || 'cover') + '" data-gallery="' + (galleries.length - 1) + '" aria-label="看「' + esc(title) + '」的照片">' +
+      '<img src="' + esc(imgs[0].thumb) + '" alt="" loading="lazy">' +
+      (imgs.length > 1 ? '<span class="cover-count">' + imgs.length + ' 張</span>' : '') + '</button>';
+  }
 
   function rows(name) {
     const grid = (data && data.sheets && data.sheets[name]) || [];
@@ -156,17 +185,32 @@
       day['重點'] && ['star', day['重點']]
     ].filter(Boolean).map(([icon, t]) => '<div class="fact">' + ICON[icon] + '<span>' + txt(t) + '</span></div>').join('');
 
+    const spots = rows('景點');
     const list = items.filter((it) => Number(it['Day']) === currentDay).map((it) => {
       const type = it['類型'];
       const color = TYPE_COLORS[type] || 'var(--ink-3)';
-      const map = it['地圖'] ? '<a class="tl-map" href="' + esc(mapUrl(it['地圖'])) + '" target="_blank" rel="noopener">' + ICON.map + '地圖</a>' : '';
+      const links = it['地圖']
+        ? '<div class="tl-links"><a class="tl-map" href="' + esc(mapUrl(it['地圖'])) + '" target="_blank" rel="noopener">' + ICON.map + '地圖</a>' +
+          '<a class="tl-map" href="' + esc(navUrl(it['地圖'])) + '" target="_blank" rel="noopener">' + ICON.car + '導航</a></div>'
+        : '';
+      const spot = spots.find((s) => (s['日文'] && s['日文'] === it['地圖']) || (s['名稱'] && it['項目'].indexOf(s['名稱']) >= 0));
+      const thumb = spot ? coverHtml(spot['名稱'], parseImages(spot['圖片']), 'thumb') : '';
       return '<li class="tl' + (type === '備案' ? ' is-alt' : '') + '" style="--c:' + color + '">' +
         '<div class="tl-time">' + esc(it['時間']) + '</div>' +
         '<div class="tl-rail"><span class="tl-dot"></span></div>' +
-        '<div class="tl-body"><div class="tl-type">' + esc(type) + '</div>' +
+        '<div class="tl-body"><div class="tl-main"><div class="tl-type">' + esc(type) + '</div>' +
         '<div class="tl-title">' + esc(it['項目']) + '</div>' +
-        (it['說明'] ? '<p class="tl-desc">' + txt(it['說明']) + '</p>' : '') + map + '</div></li>';
+        (it['說明'] ? '<p class="tl-desc">' + txt(it['說明']) + '</p>' : '') + links + '</div>' + thumb + '</div></li>';
     }).join('');
+
+    dayMap = dayPoints(currentDay);
+    const legend = dayMap.pts.map((p, i) => '<span><i class="pin-mini' + (p.start ? ' start' : '') + '">' + pinLabel(dayMap, i) + '</i>' + esc(p.name) + '</span>').join('<b>→</b>');
+    const mapHtml = dayMap.pts.length
+      ? '<div class="day-map-wrap"><div id="day-map" class="day-map"></div>' +
+        '<p class="map-legend">' + legend + '</p>' +
+        (dayMap.pts.length >= 2 ? '<a class="btn" href="' + esc(routeUrl(dayMap.pts)) + '" target="_blank" rel="noopener">' + ICON.map + '用 Google 地圖看這天的路線</a>' : '') +
+        '</div>'
+      : '';
 
     const prev = days.find((d) => Number(d['Day']) === currentDay - 1);
     const next = days.find((d) => Number(d['Day']) === currentDay + 1);
@@ -178,12 +222,118 @@
         '<h2>' + esc(day['標題']) + '</h2>' +
         '<p class="route">' + esc(day['路線']) + '</p>' +
         (facts ? '<div class="day-facts">' + facts + '</div>' : '') +
+        mapHtml +
         (list ? '<ol class="timeline">' + list + '</ol>' : '') +
       '</article>' +
       '<div class="day-nav">' +
         (prev ? '<button class="btn" data-day="' + (currentDay - 1) + '">← Day ' + (currentDay - 1) + '</button>' : '<span></span>') +
         (next ? '<button class="btn" data-day="' + (currentDay + 1) + '">Day ' + (currentDay + 1) + ' →</button>' : '<span></span>') +
       '</div>';
+  }
+
+  // ── day map ──
+  let dayMap = null;
+  let mapInst = null;
+  const ROUTE_KEY = 'tohoku-route:';
+
+  // 起點是前一晚的住宿，接著是當天有座標的地點（備案另外標示，不連線）
+  function dayPoints(n) {
+    const items = rows('行程');
+    const pts = [], alts = [];
+    const prevStays = items.filter((it) => Number(it['Day']) < n && it['類型'] === '住宿' && parseLatLng(it['座標']));
+    if (prevStays.length) {
+      const p = prevStays[prevStays.length - 1];
+      pts.push({ ll: parseLatLng(p['座標']), name: p['項目'].replace(/\s*入住$/, ''), start: true });
+    }
+    items.filter((it) => Number(it['Day']) === n).forEach((it) => {
+      const ll = parseLatLng(it['座標']);
+      if (!ll) return;
+      const pt = { ll: ll, name: it['項目'].replace(/\s*入住$/, '') };
+      if (it['類型'] === '備案') { alts.push(pt); return; }
+      const last = pts[pts.length - 1];
+      if (last && last.ll[0] === ll[0] && last.ll[1] === ll[1]) return;
+      pts.push(pt);
+    });
+    return { pts: pts, alts: alts };
+  }
+  function pinLabel(dm, i) {
+    if (dm.pts[i].start) return '起';
+    return String(dm.pts[0].start ? i : i + 1);
+  }
+  function routeUrl(pts) {
+    const ll = (p) => p.ll.join(',');
+    const mid = pts.slice(1, -1).slice(0, 9).map(ll).join('|');
+    return 'https://www.google.com/maps/dir/?api=1&travelmode=driving&origin=' + ll(pts[0]) +
+      '&destination=' + ll(pts[pts.length - 1]) + (mid ? '&waypoints=' + encodeURIComponent(mid) : '');
+  }
+
+  function initDayMap() {
+    if (mapInst) { mapInst.remove(); mapInst = null; }
+    const el = document.getElementById('day-map');
+    if (!el || !window.L || !dayMap || !dayMap.pts.length) return;
+    const touch = window.matchMedia('(pointer: coarse)').matches;
+    const map = mapInst = L.map(el, { scrollWheelZoom: false, dragging: !touch, tap: false, zoomControl: !touch });
+    L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png', {
+      attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">国土地理院</a>', minZoom: 5, maxZoom: 18
+    }).addTo(map);
+    map.fitBounds(dayMap.pts.concat(dayMap.alts).map((p) => p.ll), { padding: [30, 30], maxZoom: 12 });
+
+    const pin = (cls, label) => L.divIcon({ className: 'pin ' + cls, html: '<span>' + label + '</span>', iconSize: [26, 26], iconAnchor: [13, 13] });
+    dayMap.pts.forEach((p, i) => {
+      L.marker(p.ll, { icon: pin(p.start ? 'pin-start' : '', pinLabel(dayMap, i)) })
+        .bindTooltip(p.name, { direction: 'top', offset: [0, -12] }).addTo(map);
+    });
+    dayMap.alts.forEach((p) => {
+      L.marker(p.ll, { icon: pin('pin-alt', '備') }).bindTooltip(p.name + '（備案）', { direction: 'top', offset: [0, -12] }).addTo(map);
+    });
+    if (dayMap.pts.length >= 2) drawRoute(dayMap.pts.map((p) => p.ll), map);
+  }
+
+  // 開車路線用 OSRM 算，算過的存在手機裡；連不上時改畫虛線
+  async function drawRoute(lls, map) {
+    const key = ROUTE_KEY + lls.map((l) => l.join(',')).join(';');
+    let line = null;
+    try { line = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { /* ignore */ }
+    if (!line) {
+      try {
+        const url = 'https://router.project-osrm.org/route/v1/driving/' + lls.map((l) => l[1] + ',' + l[0]).join(';') + '?overview=full&geometries=geojson';
+        const json = await (await fetch(url)).json();
+        if (json.code !== 'Ok') throw new Error(json.code);
+        line = json.routes[0].geometry.coordinates.map((c) => [Math.round(c[1] * 1e5) / 1e5, Math.round(c[0] * 1e5) / 1e5]);
+        try { localStorage.setItem(key, JSON.stringify(line)); } catch (e) { /* ignore */ }
+      } catch (e) { line = null; }
+    }
+    if (map !== mapInst) return;
+    if (line) L.polyline(line, { color: '#b23a2a', weight: 4, opacity: 0.85 }).addTo(map);
+    else L.polyline(lls, { color: '#b23a2a', weight: 3, dashArray: '6 8' }).addTo(map);
+  }
+
+  // ── lightbox ──
+  let lb = null;
+  function openLightbox(g, i) {
+    lb = { g: g, i: i };
+    $('#lightbox').hidden = false;
+    document.body.style.overflow = 'hidden';
+    showLightbox();
+  }
+  function showLightbox() {
+    const img = lb.g.imgs[lb.i];
+    $('#lb-img').src = img.src;
+    $('#lb-title').textContent = lb.g.title;
+    $('#lb-count').textContent = lb.g.imgs.length > 1 ? (lb.i + 1) + ' / ' + lb.g.imgs.length : '';
+    $('#lb-caption').textContent = img.caption;
+    document.querySelectorAll('.lb-nav').forEach((b) => { b.hidden = lb.g.imgs.length < 2; });
+  }
+  function stepLightbox(d) {
+    if (!lb) return;
+    lb.i = (lb.i + d + lb.g.imgs.length) % lb.g.imgs.length;
+    showLightbox();
+  }
+  function closeLightbox() {
+    lb = null;
+    $('#lightbox').hidden = true;
+    $('#lb-img').removeAttribute('src');
+    document.body.style.overflow = '';
   }
 
   function statusBadge(s) {
@@ -211,7 +361,7 @@
       ].filter(([, v]) => v).map(([k, v]) => '<dt>' + k + '</dt><dd>' + txt(v) + '</dd>').join('');
       const q = h['地址'] || h['日文名'] || h['名稱'];
       const tel = h['電話'] ? '<a class="btn" href="tel:' + esc(h['電話'].replace(/[^\d+]/g, '')) + '">' + ICON.phone + esc(h['電話']) + '</a>' : '';
-      return '<article class="card stay">' +
+      return '<article class="card stay">' + coverHtml(h['名稱'], parseImages(h['圖片'])) +
         '<div class="stay-top"><div><div class="stay-date">' + dateLabel + '・' + nights + ' 晚・' + esc(h['地區']) + '</div>' +
         '<h3>' + esc(h['名稱']) + '</h3>' + (h['日文名'] && h['日文名'] !== h['名稱'] ? '<div class="jp">' + esc(h['日文名']) + '</div>' : '') + '</div>' +
         statusBadge(h['狀態']) + '</div>' +
@@ -244,13 +394,24 @@
         '</article>';
     };
 
-    const car = (groups['租車'] || []).map((r) => '<dt>' + esc(r['項目']) + '</dt><dd>' + txt(r['內容']) + '</dd>').join('');
-    const drive = (groups['車程'] || []).map((r) => '<li><span>' + esc(r['項目']) + '</span><span>' + esc(r['內容']) + '</span></li>').join('');
+    // 第四欄放導航目的地（車程）或圖片（租車）
+    const extra = (r) => r['導航／圖片'] || r['導航'] || r['圖片'] || '';
+    const carRows = groups['租車'] || [];
+    const carPic = carRows.find((r) => r['項目'] === '圖片');
+    const carCover = carPic ? coverHtml(get('租車', '車款') || '租車', parseImages(extra(carPic))) : '';
+    const car = carRows.filter((r) => r !== carPic).map((r) => '<dt>' + esc(r['項目']) + '</dt><dd>' + txt(r['內容']) + '</dd>').join('');
+    const drive = (groups['車程'] || []).map((r) => {
+      const inner = '<span>' + esc(r['項目']) + '</span><span>' + esc(r['內容']) + '</span>';
+      return extra(r)
+        ? '<li><a href="' + esc(navUrl(extra(r))) + '" target="_blank" rel="noopener">' + inner + '<span class="nav-go">' + ICON.car + '導航</span></a></li>'
+        : '<li><div>' + inner + '</div></li>';
+    }).join('');
 
     return '<div class="section-title"><h2>航班</h2><p>星宇航空</p></div>' +
       '<div class="stack">' + flight('去程') + flight('回程') + '</div>' +
-      (car ? '<h3 class="sub-title">租車</h3><article class="card"><dl class="kv">' + car + '</dl></article>' : '') +
-      (drive ? '<h3 class="sub-title">開車時間（粗估）</h3><article class="card"><ul class="drive-list">' + drive + '</ul></article>' : '');
+      (car ? '<h3 class="sub-title">租車</h3><article class="card">' + carCover + '<dl class="kv">' + car + '</dl></article>' : '') +
+      (drive ? '<h3 class="sub-title">開車時間（粗估）</h3><p class="hint">點一段路線，Google 地圖會從你目前的位置導航到目的地。</p>' +
+        '<article class="card"><ul class="drive-list">' + drive + '</ul></article>' : '');
   }
 
   function viewSpots() {
@@ -263,12 +424,13 @@
       const facts = [['開放', s['開放時間']], ['費用', s['費用']], ['停車', s['停車']]]
         .filter(([, v]) => v).map(([k, v]) => '<span><b>' + k + '</b>' + esc(v) + '</span>').join('');
       const koyo = s['紅葉見頃'] ? '<span class="badge maple">🍁 ' + esc(s['紅葉見頃']) + '</span>' : '';
-      return '<article class="card spot' + (s['狀態'] === '備案' ? ' is-alt' : '') + '">' +
+      return '<article class="card spot' + (s['狀態'] === '備案' ? ' is-alt' : '') + '">' + coverHtml(s['名稱'], parseImages(s['圖片'])) +
         '<div class="spot-head"><div><h3>' + esc(s['名稱']) + '</h3>' +
         '<div class="where">Day ' + esc(s['Day']) + '・' + esc(s['地區']) + (s['狀態'] === '備案' ? '・備案' : '') + '</div></div>' + koyo + '</div>' +
         (s['介紹'] ? '<p class="desc">' + txt(s['介紹']) + '</p>' : '') +
         (facts ? '<div class="facts">' + facts + '</div>' : '') +
-        '<div class="btn-row"><a class="btn" href="' + esc(mapUrl(s['日文'] || s['名稱'])) + '" target="_blank" rel="noopener">' + ICON.map + '地圖</a></div>' +
+        '<div class="btn-row"><a class="btn" href="' + esc(mapUrl(s['日文'] || s['名稱'])) + '" target="_blank" rel="noopener">' + ICON.map + '地圖</a>' +
+        '<a class="btn" href="' + esc(navUrl(s['日文'] || s['名稱'])) + '" target="_blank" rel="noopener">' + ICON.car + '導航</a></div>' +
         '</article>';
     }).join('');
     return '<div class="section-title"><h2>景點介紹</h2><p>🍁 為 2026 見頃預測</p></div>' +
@@ -403,7 +565,10 @@
     const v = currentView();
     document.querySelectorAll('.tabs a').forEach((a) => a.classList.toggle('active', a.dataset.view === v));
     const fn = { plan: viewPlan, stay: viewStay, move: viewMove, spots: viewSpots, prep: viewPrep }[v];
+    galleries = [];
+    dayMap = null;
     $('#app').innerHTML = fn();
+    initDayMap();
   }
   function renderAll() {
     renderHeader();
@@ -412,6 +577,15 @@
   }
 
   document.addEventListener('click', (e) => {
+    const lbBtn = e.target.closest('[data-lb]');
+    if (lbBtn) {
+      const act = lbBtn.dataset.lb;
+      if (act === 'close') closeLightbox(); else stepLightbox(act === 'next' ? 1 : -1);
+      return;
+    }
+    if (e.target.id === 'lightbox' || e.target.classList.contains('lb-figure')) { closeLightbox(); return; }
+    const gal = e.target.closest('[data-gallery]');
+    if (gal) { openLightbox(galleries[Number(gal.dataset.gallery)], 0); return; }
     const dayBtn = e.target.closest('[data-day]');
     if (dayBtn) {
       currentDay = Number(dayBtn.dataset.day);
@@ -431,6 +605,21 @@
     }
     const p = e.target.closest('.person');
     if (p) toggleCheck(p);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (!lb) return;
+    if (e.key === 'Escape') closeLightbox();
+    else if (e.key === 'ArrowRight') stepLightbox(1);
+    else if (e.key === 'ArrowLeft') stepLightbox(-1);
+  });
+  let touchX = null;
+  $('#lightbox').addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+  $('#lightbox').addEventListener('touchend', (e) => {
+    if (touchX == null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    touchX = null;
+    if (Math.abs(dx) > 50) stepLightbox(dx < 0 ? 1 : -1);
   });
 
   window.addEventListener('hashchange', () => {
