@@ -187,11 +187,15 @@
   }
 
   function renderFooter() {
-    const when = data && data.updated ? new Date(data.updated).toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-    const label = { live: '試算表即時資料', cache: '上次載入的資料', backup: '備份資料' }[source] || '';
-    $('#sync').textContent = [label, when && '更新於 ' + when].filter(Boolean).join('・');
-    const edit = $('#edit-link');
-    if (CFG.SHEET_URL) edit.href = CFG.SHEET_URL; else edit.parentElement.hidden = true;
+    let text = '';
+    if (data && data.updated) {
+      const d = new Date(data.updated);
+      if (!isNaN(d)) {
+        const p = (n) => String(n).padStart(2, '0');
+        text = '更新於 ' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+      }
+    }
+    $('#sync').textContent = text;
   }
 
   // ── views ──
