@@ -406,6 +406,13 @@
     return '<span class="badge ' + cls + '">' + esc(s) + '</span>';
   }
 
+  // 「宮城縣,大崎市 - 鳴子溫泉」拆成縣、市、區域，各自一個標籤，獨立一行
+  function placeTags(region) {
+    const parts = String(region || '').split(/[,，\-－–]/).map((p) => p.trim()).filter(Boolean);
+    if (!parts.length) return '';
+    return '<div class="stay-place">' + ICON.map + parts.map((p) => '<span class="tag tag-place">' + esc(p) + '</span>').join('') + '</div>';
+  }
+
   function viewStay() {
     const s = settings();
     const start = s['出發日'];
@@ -426,7 +433,8 @@
       const q = h['地址'] || h['日文名'] || h['名稱'];
       const tel = h['電話'] ? '<a class="btn" href="tel:' + esc(h['電話'].replace(/[^\d+]/g, '')) + '">' + ICON.phone + esc(h['電話']) + '</a>' : '';
       return '<article class="card stay">' + coverHtml(h['名稱'], parseImages(h['圖片'])) +
-        '<div class="stay-top"><div><div class="stay-date">' + dateLabel + '・' + nights + ' 晚・' + esc(h['地區']) + '</div>' +
+        '<div class="stay-top"><div><div class="stay-tags"><span class="tag tag-date">' + dateLabel + '</span><span class="tag tag-nights">' + nights + ' 晚</span></div>' +
+        placeTags(h['地區']) +
         '<h3>' + esc(h['名稱']) + '</h3>' + (h['日文名'] && h['日文名'] !== h['名稱'] ? '<div class="jp">' + esc(h['日文名']) + '</div>' : '') + '</div>' +
         statusBadge(h['狀態']) + '</div>' +
         (kv ? '<dl class="kv">' + kv + '</dl>' : '') +
