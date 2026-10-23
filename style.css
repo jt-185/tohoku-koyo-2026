@@ -385,4 +385,13 @@ main { max-width: 760px; margin: 0 auto; padding: 26px 16px 40px; }
 .stay-place svg { width: 13px; height: 13px; }
 .place-text { font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
 .place-text i { font-style: normal; color: var(--ink-3); margin: 0 3px; }
-.tag-day { background: var(--ink); color: var(--paper); font-size: 14px; padding: 3px 13px; letter-spacing: .06em; }
+/* Day 是卡片左上角的一體式標籤，貼著卡片邊角 */
+.stay { position: relative; }
+.day-corner {
+  position: absolute; top: 0; left: 0; z-index: 2; min-width: 66px; text-align: center;
+  padding: 7px 14px 8px; background: var(--ink); color: var(--paper);
+  font-family: var(--serif); font-size: 14px; font-weight: 700; letter-spacing: .12em; line-height: 1.2;
+  border-radius: var(--radius) 0 14px 0;
+}
+.stay:has(.day-corner):not(:has(.cover)) .stay-tags { margin-left: 78px; min-height: 28px; }
+.stay:has(.day-corner):not(:has(.cover)) .stay-place { margin-top: 12px; }
