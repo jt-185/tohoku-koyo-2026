@@ -540,9 +540,19 @@
         return '<div class="flight-end ' + cls + '"><div class="code">' + esc(parts[0]) + '</div>' +
           '<div class="time">' + esc(time || '') + '</div><div class="place">' + esc(parts.slice(1).join(' ')) + '</div></div>';
       };
+      // 「星宇航空 JX862」→ 航空公司＋班次；星宇用官方 logo
+      const fm = get(g, '航班').match(/^(.*?)\s*([A-Z0-9]{2}\s?\d{1,4})$/);
+      const airline = fm ? fm[1] : get(g, '航班'), flightNo = fm ? fm[2].replace(/\s/, '') : '';
+      const brand = /星宇|STARLUX/i.test(airline)
+        ? '<img class="sl-logo" src="photos/starlux-logo.png" alt="STARLUX 星宇航空">'
+        : '<span class="airline-name">' + esc(airline) + '</span>';
+      const dur = get(g, '飛行時間');
       return '<article class="card flight">' +
-        '<div class="flight-top"><span>' + esc(g) + '・' + esc(get(g, '日期')) + '</span><b>' + esc(get(g, '航班')) + '</b></div>' +
-        '<div class="flight-route">' + end(fromPlace, fromTime, 'from') + '<div class="flight-mid">' + ICON.plane + '</div>' + end(toPlace, toTime, 'to') + '</div>' +
+        '<div class="flight-top">' + brand +
+        '<div class="flight-id"><small>' + esc(g) + '・' + esc(get(g, '日期')) + '</small><b>' + esc(flightNo || get(g, '航班')) + '</b></div></div>' +
+        '<div class="flight-route">' + end(fromPlace, fromTime, 'from') +
+        '<div class="flight-mid">' + (dur ? '<span class="dur">' + esc(dur) + '</span>' : '') + ICON.plane + '</div>' +
+        end(toPlace, toTime, 'to') + '</div>' +
         (get(g, '行李') ? '<div class="flight-foot">行李：' + esc(get(g, '行李')) + '</div>' : '') +
         '</article>';
     };
@@ -579,8 +589,8 @@
 
     return '<div class="section-title"><h2>航班</h2><p>星宇航空</p></div>' +
       '<div class="stack">' + flight('去程') + flight('回程') + '</div>' +
-      (car ? '<h3 class="sub-title">租車</h3><article class="card">' + carCover + '<dl class="kv">' + car + '</dl></article>' : '') +
-      (drive ? '<h3 class="sub-title">開車時間（Google 地圖）</h3><p class="hint">點一段路線，Google 地圖會從你目前的位置導航到目的地。</p>' +
+      (car ? '<div class="section-title spaced"><h2>租車</h2></div><article class="card">' + carCover + '<dl class="kv">' + car + '</dl></article>' : '') +
+      (drive ? '<div class="section-title spaced"><h2>開車時間</h2><p>Google 地圖</p></div><p class="hint">點一段路線，Google 地圖會從你目前的位置導航到目的地。</p>' +
         '<article class="card"><ul class="drive-list">' + drive + '</ul></article>' : '');
   }
 
