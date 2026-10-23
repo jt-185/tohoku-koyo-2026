@@ -669,7 +669,7 @@
         '<div class="cat">' + esc(it['分類']) + '</div><div class="t">' + esc(it['項目']) + '</div>' +
         (it['說明'] ? '<p class="d">' + txt(it['說明']) + '</p>' : '') +
         (link ? '<p class="d"><a href="' + esc(link) + '" target="_blank" rel="noopener">開啟連結 ↗</a></p>' : '') +
-        '<div class="people">' + chips + '</div></article>';
+        '<div class="people" style="--n:' + ordered.length + '">' + chips + '</div></article>';
     }).join('');
 
     const whoChips = people.map((p) => '<button class="filter' + (p === me ? ' active' : '') + '" data-me="' + esc(p) + '">' + esc(p) + '</button>').join('');
@@ -678,7 +678,7 @@
       : '目前還沒連上試算表，勾選只會存在這台裝置。';
 
     return '<div class="section-title"><h2>出發準備</h2><p>每個人自己勾</p></div>' +
-      '<p class="hint">我是：</p><div class="who">' + whoChips + '</div>' +
+      '<p class="hint">我是：</p><div class="who" style="--n:' + people.length + '">' + whoChips + '</div>' +
       '<div class="progress">' + progress + '</div>' +
       '<p class="hint">' + hint + '</p>' +
       '<div class="stack">' + list + '</div>' +

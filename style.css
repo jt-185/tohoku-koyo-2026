@@ -366,7 +366,8 @@ main { max-width: 760px; margin: 0 auto; padding: 26px 16px 40px; }
 .spot.is-alt { background: transparent; box-shadow: none; }
 
 /* ── Checklist ── */
-.who { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.who { display: grid; grid-template-columns: repeat(var(--n, 5), minmax(0, 104px)); gap: 6px; margin-bottom: 14px; }
+.who .filter { padding: 5px 4px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .progress { display: grid; grid-template-columns: repeat(auto-fit, minmax(62px, 1fr)); gap: 6px; margin-bottom: 18px; }
 .prog { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; min-width: 0; }
 .prog .name { font-size: 12px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -378,7 +379,7 @@ main { max-width: 760px; margin: 0 auto; padding: 26px 16px 40px; }
 .check-item .cat { font-size: 11.5px; letter-spacing: .1em; color: var(--maple); font-weight: 500; }
 .check-item .t { font-weight: 700; font-size: 15.5px; }
 .check-item .d { font-size: 13.5px; color: var(--ink-2); margin: 2px 0 0; }
-.people { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.people { display: grid; grid-template-columns: repeat(var(--n, 5), minmax(0, 104px)); gap: 5px; margin-top: 10px; }
 .person {
   display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 5px;
   border: 1px solid var(--line); border-radius: 999px; background: var(--paper);
@@ -521,4 +522,18 @@ main { max-width: 760px; margin: 0 auto; padding: 26px 16px 40px; }
 @keyframes ovBlink { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
 @media (prefers-reduced-motion: reduce) {
   .overview.is-closed .ov-chev, .overview.is-closed .ov-hint { animation: none; }
+}
+
+/* 名字固定排成一行：手機上每個標籤縮小，圓圈縮小、字縮小 */
+.person { justify-content: center; min-width: 0; padding: 4px 4px; gap: 3px; white-space: nowrap; }
+@media (max-width: 600px) {
+  .person { font-size: 12px; padding: 4px 3px; }
+  .person .box { width: 14px; height: 14px; }
+  .person .box svg { width: 9px; height: 9px; }
+}
+@media (max-width: 360px) {
+  .person { font-size: 11px; padding: 4px 2px; gap: 2px; }
+  .person .box { width: 12px; height: 12px; }
+  .person .box svg { width: 8px; height: 8px; }
+  .who .filter { font-size: 12px; }
 }
