@@ -772,11 +772,10 @@
         '<div class="sg-field"><label>想說的是</label><div class="sg-chips types" style="--n:' + SG_TYPES.length + '">' + typeChips + '</div></div>' +
         '<div class="sg-field"><label for="sg-text">內容</label>' +
           '<textarea id="sg-text" rows="5" maxlength="1000" placeholder="' + esc(ph) + '">' + esc(sgDraft.text) + '</textarea></div>' +
-        '<div class="sg-field"><label for="sg-link">連結（選填）</label>' +
-          '<input id="sg-link" type="url" inputmode="url" maxlength="300" placeholder="Google 地圖或網頁連結" value="' + esc(sgDraft.link) + '"></div>' +
+        '<div class="sg-field"><label for="sg-link">相關連結（選填）</label>' +
+          '<input id="sg-link" type="url" inputmode="url" maxlength="300" placeholder="例如 YouTube、Google 地圖的連結" value="' + esc(sgDraft.link) + '"></div>' +
         '<p class="sg-msg' + (sgState.msg ? (sgState.ok ? ' ok' : ' err') : '') + '" id="sg-msg" role="status">' + esc(sgState.msg) + '</p>' +
         '<button type="submit" class="btn-primary" id="sg-send"' + (sgState.sending ? ' disabled' : '') + '>' + (sgState.sending ? '送出中…' : '送出建議') + '</button>' +
-        '<p class="sg-note">送出後只有 Jaron 看得到，會再看要不要排進行程。</p>' +
       '</form>' +
       (hist ? '<h3 class="sub-title">你在這支手機送過的</h3><ul class="sg-history">' + hist + '</ul>' : '');
   }

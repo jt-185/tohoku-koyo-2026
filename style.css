@@ -568,3 +568,6 @@ main { max-width: 760px; margin: 0 auto; padding: 26px 16px 40px; }
 .sg-chips.names, .sg-chips.types { display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); gap: 6px; }
 .sg-chips .filter { padding: 6px 4px; text-align: center; white-space: nowrap; }
 @media (min-width: 820px) { .sg-chips.names { grid-template-columns: repeat(var(--n, 5), minmax(0, 110px)); } .sg-chips.types { grid-template-columns: repeat(var(--n, 4), minmax(0, 130px)); } }
+
+/* 輸入框的提示字小一點；打字時維持 16px，避免 iPhone 點進去會自動放大 */
+.sg-field textarea::placeholder, .sg-field input::placeholder { font-size: 13.5px; color: var(--ink-3); opacity: 1; }
