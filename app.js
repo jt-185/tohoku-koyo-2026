@@ -45,11 +45,20 @@
   function parseImages(text) {
     return String(text || '').split('\n').map((line) => {
       const [url, ...rest] = line.split('|');
-      let src = safeUrl(url);
-      if (!/^https:/i.test(src)) return null;
-      const drive = src.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]+)/);
-      if (drive) src = 'https://drive.google.com/thumbnail?id=' + drive[1] + '&sz=w1600';
-      const thumb = drive ? src.replace('sz=w1600', 'sz=w600') : src.replace('/1280px-', '/500px-');
+      let src = String(url || '').trim();
+      let thumb;
+      const local = src.match(/^(?:\.\/)?(photos\/[\w\-.]+?)(-s)?\.(jpe?g|png|webp)$/i);
+      if (local) {
+        // 放在網站 photos 資料夾的照片：大圖 name.jpg，縮圖 name-s.jpg
+        src = local[1] + '.' + local[3];
+        thumb = local[1] + '-s.' + local[3];
+      } else {
+        src = safeUrl(src);
+        if (!/^https:/i.test(src)) return null;
+        const drive = src.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]+)/);
+        if (drive) src = 'https://drive.google.com/thumbnail?id=' + drive[1] + '&sz=w1600';
+        thumb = drive ? src.replace('sz=w1600', 'sz=w600') : src.replace('/1280px-', '/500px-');
+      }
       return { src: src, thumb: thumb, caption: rest.join('|').trim() };
     }).filter(Boolean);
   }
