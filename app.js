@@ -527,11 +527,20 @@
     const carPic = carRows.find((r) => r['項目'] === '圖片');
     const carCover = carPic ? coverHtml(get('租車', '車款') || '租車', parseImages(extra(carPic))) : '';
     const car = carRows.filter((r) => r !== carPic).map((r) => '<dt>' + esc(r['項目']) + '</dt><dd>' + txt(r['內容']) + '</dd>').join('');
+    // 「約 1.5 小時・97 公里」拆成大字的時間和公里數標籤
+    const driveMeta = (text) => {
+      const [t, km] = String(text || '').split('・').map((x) => x.trim());
+      const m = (t || '').match(/^(約\s*)?([\d.]+)\s*(小時|分)/);
+      const time = m
+        ? '<span class="drive-time">' + (m[1] ? '<small>約</small>' : '') + '<b>' + esc(m[2]) + '</b><small>' + m[3] + '</small></span>'
+        : '<span class="drive-time"><b>' + esc(t || '') + '</b></span>';
+      return time + (km ? '<span class="km">' + esc(km) + '</span>' : '');
+    };
     const drive = (groups['車程'] || []).map((r) => {
-      const inner = '<span>' + esc(r['項目']) + '</span><span>' + esc(r['內容']) + '</span>';
+      const body = '<span class="drive-name">' + esc(r['項目']) + '</span><span class="drive-meta">' + driveMeta(r['內容']) + '</span>';
       return extra(r)
-        ? '<li><a href="' + esc(navUrl(extra(r))) + '" target="_blank" rel="noopener">' + inner + '<span class="nav-go">' + ICON.car + '導航</span></a></li>'
-        : '<li><div>' + inner + '</div></li>';
+        ? '<li><a href="' + esc(navUrl(extra(r))) + '" target="_blank" rel="noopener">' + body + '<span class="nav-go">' + ICON.car + '導航</span></a></li>'
+        : '<li><div>' + body + '</div></li>';
     }).join('');
 
     return '<div class="section-title"><h2>航班</h2><p>星宇航空</p></div>' +
