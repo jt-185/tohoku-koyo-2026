@@ -246,13 +246,14 @@
     // 3) 地點名稱：試 8 個方位（先近後遠），避開其他圓圈、其他名稱、畫面邊緣，也不能壓到路線；
     //    都不行時選壓到路線最少的位置
     const labelSegs = [];
-    routes.filter((rt) => !focus || rt.d.n === focus).forEach((rt) => {
+    routes.forEach((rt) => {
       for (let i = 1; i < rt.xy.length; i++) labelSegs.push([rt.xy[i - 1][0], rt.xy[i - 1][1], rt.xy[i][0], rt.xy[i][1]]);
     });
     const routeHits = (b) => { let n = 0; for (const sg of labelSegs) if (segBox(sg, b)) n++; return n; };
     const placed = spots.map((sp) => [sp.x - sp.r, sp.y - sp.r, sp.x + sp.r, sp.y + sp.r]);
     const labelBoxes = [];
     let texts = '';
+    let leaders = '';
     spots.forEach((sp) => {
       if (sp.kind === 'grey') return;
       let text, strong;
@@ -276,16 +277,33 @@
       });
       const blocked = (b) => placed.some((q) => !(b[2] < q[0] || b[0] > q[2] || b[3] < q[1] || b[1] > q[3])) ||
         b[0] < vx || b[2] > vx + vw || b[1] < vy || b[3] > vy + vh;
-      let pick = null, least = Infinity;
+      let pick = null, pickHits = Infinity, leader = null;
       for (const c of tries) {
         if (blocked(c[3])) continue;
         const h = routeHits(c[3]);
-        if (h === 0) { pick = c; break; }
-        if (h < least) { least = h; pick = c; }
+        if (h < pickHits) { pick = c; pickHits = h; if (h === 0) break; }
+      }
+      // 附近都會壓到路線：往外找空位，用細線把名稱拉出來
+      if (pickHits > 0) {
+        found: for (const dist of [24, 36, 50, 66, 84]) {
+          for (let k = 0; k < 16; k++) {
+            const ang = ((k + 0.5) * Math.PI) / 8, cs = Math.cos(ang), sn = Math.sin(ang);
+            const ax = x + cs * dist * u, ay = y + sn * dist * u;
+            const anchor = cs > 0.35 ? 'start' : cs < -0.35 ? 'end' : 'middle';
+            const ty = anchor === 'middle' ? (sn > 0 ? ay + fs * 0.9 : ay - fs * 0.3) : ay + fs * 0.33;
+            const cand = mk(ax + (anchor === 'start' ? 1.5 * u : anchor === 'end' ? -1.5 * u : 0), ty, anchor);
+            if (blocked(cand[3]) || routeHits(cand[3]) > 0) continue;
+            const seg = [x + cs * sp.r, y + sn * sp.r, ax, ay];
+            if (labelBoxes.some((bx) => segBox(seg, bx))) continue;
+            pick = cand; pickHits = 0; leader = seg;
+            break found;
+          }
+        }
       }
       if (!pick) return;
       placed.push(pick[3]);
       labelBoxes.push(pick[3]);
+      if (leader) leaders += '<line x1="' + leader[0].toFixed(1) + '" y1="' + leader[1].toFixed(1) + '" x2="' + leader[2].toFixed(1) + '" y2="' + leader[3].toFixed(1) + '" stroke="#6b625a" stroke-width="' + (1 * u).toFixed(1) + '" stroke-linecap="round"/>';
       texts += '<text x="' + pick[0].toFixed(1) + '" y="' + pick[1].toFixed(1) + '" text-anchor="' + pick[2] + '" class="stop-label' + (strong ? ' strong' : '') +
         '" font-size="' + fs.toFixed(1) + '" stroke-width="' + (3.4 * u).toFixed(1) + '">' + esc(text) + '</text>';
     });
@@ -297,7 +315,7 @@
 
     // 縣名：避開路線、地點和地點名稱
     const obs = { segs: [], circles: [], boxes: labelBoxes };
-    routes.filter((rt) => !focus || rt.d.n === focus).forEach((rt) => {
+    routes.forEach((rt) => {
       for (let i = 1; i < rt.xy.length; i++) obs.segs.push([rt.xy[i - 1][0], rt.xy[i - 1][1], rt.xy[i][0], rt.xy[i][1]]);
     });
     spots.forEach((sp) => { if (sp.kind !== 'grey') obs.circles.push([sp.x, sp.y, sp.r + 2 * u]); });
@@ -318,7 +336,7 @@
       const attrs = ' data-route-day="' + rt.d.n + '" d="' + pathD(rt.line || rt.d.pts.map((p) => p.ll)) + '"';
       s += '<path class="route-hit"' + attrs + ' stroke-width="' + (16 * u).toFixed(1) + '"/>';
       s += '<path class="route' + (rt.line ? '' : ' pending') + (dim ? ' dim' : '') + '"' + attrs +
-        ' stroke="' + (dim ? '#a9a197' : color(rt.d.n)) + '" stroke-width="' + ((dim ? 2.4 : 4) * u).toFixed(1) + '"' +
+        ' stroke="' + (dim ? '#c6bfb4' : color(rt.d.n)) + '" stroke-width="' + ((dim ? 1.5 : 4) * u).toFixed(1) + '"' +
         (rt.line ? '' : ' stroke-dasharray="' + (6 * u).toFixed(1) + ' ' + (6 * u).toFixed(1) + '"') + '/>';
     });
 
@@ -343,7 +361,7 @@
       }
     });
 
-    return s + dots + texts + '</svg>';
+    return s + leaders + dots + texts + '</svg>';
   }
 
   // 把還沒算好的路線抓回來，更新畫面上的虛線

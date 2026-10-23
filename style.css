@@ -317,7 +317,7 @@ main { max-width: 760px; margin: 0 auto; padding: 26px 16px 40px; }
 .trip-svg { display: block; width: 100%; height: auto; }
 .trip-svg .pref-label { font-family: var(--serif); font-weight: 700; text-anchor: middle; opacity: .75; pointer-events: none; }
 .trip-svg .route { fill: none; stroke-linecap: round; stroke-linejoin: round; transition: stroke .2s, opacity .2s; }
-.trip-svg .route.dim { opacity: .55; }
+.trip-svg .route.dim { opacity: .75; }
 .trip-svg .route.pending { opacity: .7; }
 .trip-svg .route-hit { fill: none; stroke: transparent; pointer-events: stroke; }
 .ov-map .route-hit { cursor: pointer; }
