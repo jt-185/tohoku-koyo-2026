@@ -264,7 +264,7 @@
       '<article class="card day-head">' +
         '<div class="day-corner"><b class="seg-day">DAY ' + esc(day['Day']) + '</b><span class="seg-date">' + esc(day['日期']) + '</span><span class="seg-nights">週' + esc(day['星期']) + '</span></div>' +
         '<h2>' + esc(day['標題']) + '</h2>' +
-        '<p class="route">' + esc(day['路線']) + '</p>' +
+        '<p class="route">' + ICON.map + '<span>' + esc(day['路線']) + '</span></p>' +
         (facts ? '<div class="day-facts">' + facts + '</div>' : '') +
         mapHtml +
         (list ? '<ol class="timeline">' + list + '</ol>' : '') +
