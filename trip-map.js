@@ -8,12 +8,6 @@
     '宮城県': '#f4dcc8', '山形県': '#ead9bb', '福島県': '#e1d7eb', '栃木県': '#d9e6cf',
     '秋田県': '#f0dcdc', '岩手県': '#d9e5ec', '新潟県': '#e6e9d8', '群馬県': '#e9e4d6', '茨城県': '#e4e7dd'
   };
-  const PREF_LABEL = {
-    '宮城県': { at: [728, 600], color: '#b0643a', name: '宮城縣' },
-    '山形県': { at: [360, 250], color: '#8a6a35', name: '山形縣' },
-    '福島県': { at: [560, 900], color: '#6e5a8a', name: '福島縣' },
-    '栃木県': { at: [370, 1165], color: '#5a7a45', name: '栃木縣' }
-  };
   const SEA = '#e2eaec';
   const ROUTE_KEY = 'tohoku-route3:';
 
@@ -113,6 +107,67 @@
     return w;
   }
 
+  // ── 縣名標籤：放在縣內「離邊界、路線、地點最遠」的位置，所以縮放到哪裡都不會被擋住 ──
+  const LABEL_PREFS = {
+    '宮城県': { name: '宮城縣', color: '#b0643a' },
+    '山形県': { name: '山形縣', color: '#8a6a35' },
+    '福島県': { name: '福島縣', color: '#6e5a8a' },
+    '栃木県': { name: '栃木縣', color: '#5a7a45' }
+  };
+  const ringCache = new WeakMap();
+  function ringsOf(p) {
+    let r = ringCache.get(p);
+    if (!r) {
+      r = p.d.split('M').filter(Boolean).map((seg) => seg.replace(/Z$/, '').split('L').map((pt) => pt.split(',').map(Number)));
+      ringCache.set(p, r);
+    }
+    return r;
+  }
+  function inRing(x, y, ring) {
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const [xi, yi] = ring[i], [xj, yj] = ring[j];
+      if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+    }
+    return inside;
+  }
+  function distSeg(px, py, ax, ay, bx, by) {
+    const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+    let t = l2 ? ((px - ax) * dx + (py - ay) * dy) / l2 : 0;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+  }
+  function ringEdgeDist(x, y, ring) {
+    let d = Infinity;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) d = Math.min(d, distSeg(x, y, ring[j][0], ring[j][1], ring[i][0], ring[i][1]));
+    return d;
+  }
+  function boxDist(x, y, b) {
+    const dx = Math.max(b[0] - x, 0, x - b[2]), dy = Math.max(b[1] - y, 0, y - b[3]);
+    return Math.hypot(dx, dy);
+  }
+  function placePrefLabel(pref, vb, obs, cap) {
+    const [vx, vy, vw, vh] = vb;
+    const rings = ringsOf(pref);
+    const [cx, cy] = pref.c;
+    const cols = 30, rowsN = 24;
+    let best = null;
+    for (let i = 0; i < cols; i++) {
+      for (let j = 0; j < rowsN; j++) {
+        const x = vx + ((i + 0.5) / cols) * vw, y = vy + ((j + 0.5) / rowsN) * vh;
+        const ring = rings.find((r) => inRing(x, y, r));
+        if (!ring) continue;
+        let d = Math.min(ringEdgeDist(x, y, ring), x - vx, vx + vw - x, y - vy, vy + vh - y);
+        for (const sg of obs.segs) { d = Math.min(d, distSeg(x, y, sg[0], sg[1], sg[2], sg[3])); if (d <= 0) break; }
+        for (const c of obs.circles) d = Math.min(d, Math.hypot(x - c[0], y - c[1]) - c[2]);
+        for (const b of obs.boxes) d = Math.min(d, boxDist(x, y, b));
+        const score = Math.min(d, cap) - 0.01 * Math.hypot(x - cx, y - cy) * (cap / 100);
+        if (!best || score > best.score) best = { x: x, y: y, d: d, score: score };
+      }
+    }
+    return best;
+  }
+
   // days: [{ n, pts: [{ ll, label, start, stay }], alts: [...] }]
   // opts: { vb, focus（0 = 全部）, numbers（在圓點裡寫編號）}
   function render(days, opts) {
@@ -121,91 +176,124 @@
     const [vx, vy, vw, vh] = opts.vb;
     const u = vw / 400;
     const focus = opts.focus || 0;
-    let s = '<svg class="trip-svg" viewBox="' + opts.vb.join(' ') + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="路線圖">';
-    s += '<rect x="' + vx + '" y="' + vy + '" width="' + vw + '" height="' + vh + '" fill="' + SEA + '"/>';
-    s += m.prefs.map((p) => '<path d="' + p.d + '" fill="' + (PREF_FILL[p.n] || '#ebe6dc') + '" stroke="#fffdf8" stroke-width="' + (2.2 * u).toFixed(1) + '" stroke-linejoin="round"/>').join('');
-    Object.keys(PREF_LABEL).forEach((k) => {
-      const L = PREF_LABEL[k];
-      const fs = 19 * u;
-      const half = textW(L.name, fs) / 2 + 2 * u;
-      if (L.at[0] - half < vx || L.at[0] + half > vx + vw || L.at[1] - fs < vy || L.at[1] > vy + vh) return;
-      s += '<text x="' + L.at[0] + '" y="' + L.at[1] + '" class="pref-label" fill="' + L.color + '" font-size="' + fs.toFixed(1) + '" letter-spacing="' + (2 * u).toFixed(1) + '">' + L.name + '</text>';
-    });
+    const numbered = !!(focus && opts.numbers);
 
-    // 路線：沒被選的先畫（灰），選到的最後畫在最上面
-    const order = days.slice().sort((a, b) => (a.n === focus) - (b.n === focus));
-    order.forEach((d) => {
-      if (d.pts.length < 2) return;
-      const lls = d.pts.map((p) => p.ll);
-      const line = cachedRoute(lls);
-      const dim = focus && d.n !== focus;
-      const attrs = ' data-route-day="' + d.n + '" d="' + pathD(line || lls) + '"';
-      s += '<path class="route-hit"' + attrs + ' stroke-width="' + (16 * u).toFixed(1) + '"/>';
-      s += '<path class="route' + (line ? '' : ' pending') + (dim ? ' dim' : '') + '"' + attrs +
-        ' stroke="' + (dim ? '#a9a197' : color(d.n)) + '" stroke-width="' + ((dim ? 2.4 : 4) * u).toFixed(1) + '"' +
-        (line ? '' : ' stroke-dasharray="' + (6 * u).toFixed(1) + ' ' + (6 * u).toFixed(1) + '"') + '/>';
-    });
-
-    // 點：全部模式畫每個停留點，標出住宿；單日模式只強調那天的點
-    const placed = [];
-    const labels = [];
+    // 1) 每個點的位置：單日模式下靠太近的點拉開一點，避免圓圈和名字疊在一起
+    const spots = [];
     const seen = {};
-    const dot = (ll, r, fill, stroke, sw, extra) => {
-      const [x, y] = proj(ll);
-      return '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(1) + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + sw.toFixed(1) + '"' + (extra || '') + '/>';
-    };
-    let dots = '';
     days.forEach((d) => {
-      const active = !focus || d.n === focus;
-      if (active) return;
-      d.pts.forEach((p) => { dots += dot(p.ll, 2.6 * u, '#fffdf8', '#a9a197', 1.4 * u); });
-    });
-    days.forEach((d) => {
-      if (focus && d.n !== focus) return;
+      const isActive = !focus || d.n === focus;
       d.pts.forEach((p, i) => {
+        const [x, y] = proj(p.ll);
+        if (!isActive) { spots.push({ x: x, y: y, ox: x, oy: y, kind: 'grey', r: 2.6 * u, p: p, d: d }); return; }
         const key = p.ll.join(',');
         if (seen[key]) return;
         seen[key] = true;
-        const [x, y] = proj(p.ll);
-        if (focus && opts.numbers) {
-          const r = 9 * u;
-          dots += dot(p.ll, r, p.start ? '#2b2622' : color(d.n), '#fff', 2 * u);
-          const num = p.start ? '起' : String(d.pts[0].start ? i : i + 1);
-          dots += '<text x="' + x.toFixed(1) + '" y="' + (y + 4 * u).toFixed(1) + '" class="pin-num" font-size="' + (11 * u).toFixed(1) + '">' + num + '</text>';
-          placed.push([x - r, y - r, x + r, y + r]);
-          labels.push({ x: x, y: y, r: r, text: p.label, strong: true });
-        } else {
-          const r = (p.stay ? 5 : 3.6) * u;
-          dots += dot(p.ll, r, p.stay ? color(d.n) : '#fffdf8', p.stay ? '#fff' : color(d.n), (p.stay ? 1.6 : 1.8) * u);
-          placed.push([x - r, y - r, x + r, y + r]);
-          if (p.stay || focus) labels.push({ x: x, y: y, r: r, text: p.label, strong: p.stay });
+        spots.push({ x: x, y: y, ox: x, oy: y, kind: 'stop', r: (numbered ? 8 : p.stay ? 5 : 3.6) * u, p: p, d: d, i: i });
+      });
+      if (isActive) d.alts.forEach((p) => { const [x, y] = proj(p.ll); spots.push({ x: x, y: y, ox: x, oy: y, kind: 'alt', r: 6 * u, p: p, d: d }); });
+    });
+    if (numbered) {
+      const mv = spots.filter((sp) => sp.kind !== 'grey');
+      for (let pass = 0; pass < 8; pass++) {
+        for (let i = 1; i < mv.length; i++) {
+          for (let j = 0; j < i; j++) {
+            let dx = mv[i].x - mv[j].x, dy = mv[i].y - mv[j].y, dd = Math.hypot(dx, dy);
+            const minD = mv[i].r + mv[j].r + 4 * u;
+            if (dd < minD) {
+              if (dd < 1e-6) { dx = 1; dy = -0.4; dd = Math.hypot(dx, dy); }
+              const k = (minD - dd) / dd;
+              mv[i].x += dx * k; mv[i].y += dy * k;
+            }
+          }
         }
-      });
-      d.alts.forEach((p) => {
-        const [x, y] = proj(p.ll);
-        dots += dot(p.ll, 6 * u, '#fffdf8', '#8a8178', 1.4 * u, ' stroke-dasharray="' + (2.5 * u).toFixed(1) + ' ' + (2 * u).toFixed(1) + '"');
-        if (focus) labels.push({ x: x, y: y, r: 6 * u, text: p.label + '（備案）' });
-      });
+      }
+    }
+
+    // 2) 路線（SVG 座標）
+    const routes = days.filter((d) => d.pts.length >= 2).map((d) => {
+      const lls = d.pts.map((p) => p.ll);
+      const line = cachedRoute(lls);
+      return { d: d, line: line, xy: (line || lls).map(proj) };
     });
 
-    // 標籤：依序試右、左、上、下，跟已放的重疊就換位置，四邊都撞到就不畫
+    // 3) 地點名稱：依序試右、左、上、下，跟已放的重疊就換位置
+    const placed = spots.map((sp) => [sp.x - sp.r, sp.y - sp.r, sp.x + sp.r, sp.y + sp.r]);
+    const labelBoxes = [];
     let texts = '';
-    labels.forEach((L) => {
-      const fs = (L.strong ? 13 : 12) * u;
-      const w = textW(L.text, fs), gap = 4 * u;
+    spots.forEach((sp) => {
+      if (sp.kind === 'grey') return;
+      let text, strong;
+      if (sp.kind === 'alt') { if (!focus) return; text = sp.p.label + '（備案）'; strong = false; }
+      else if (numbered) { text = sp.p.label; strong = true; }
+      else if (sp.p.stay || focus) { text = sp.p.label; strong = !!sp.p.stay; } else return;
+      const fs = (strong ? 12 : 11) * u;
+      const w = textW(text, fs), gap = 3.5 * u, x = sp.x, y = sp.y, r = sp.r;
       const tries = [
-        [L.x + L.r + gap, L.y + fs * 0.36, 'start', [L.x + L.r + gap, L.y - fs * 0.6, L.x + L.r + gap + w, L.y + fs * 0.5]],
-        [L.x - L.r - gap, L.y + fs * 0.36, 'end', [L.x - L.r - gap - w, L.y - fs * 0.6, L.x - L.r - gap, L.y + fs * 0.5]],
-        [L.x, L.y - L.r - gap, 'middle', [L.x - w / 2, L.y - L.r - gap - fs, L.x + w / 2, L.y - L.r - gap]],
-        [L.x, L.y + L.r + gap + fs * 0.85, 'middle', [L.x - w / 2, L.y + L.r + gap, L.x + w / 2, L.y + L.r + gap + fs]]
+        [x + r + gap, y + fs * 0.36, 'start', [x + r + gap, y - fs * 0.6, x + r + gap + w, y + fs * 0.5]],
+        [x - r - gap, y + fs * 0.36, 'end', [x - r - gap - w, y - fs * 0.6, x - r - gap, y + fs * 0.5]],
+        [x, y - r - gap, 'middle', [x - w / 2, y - r - gap - fs, x + w / 2, y - r - gap]],
+        [x, y + r + gap + fs * 0.85, 'middle', [x - w / 2, y + r + gap, x + w / 2, y + r + gap + fs]]
       ];
       const hit = (b) => placed.some((q) => !(b[2] < q[0] || b[0] > q[2] || b[3] < q[1] || b[1] > q[3])) ||
         b[0] < vx || b[2] > vx + vw || b[1] < vy || b[3] > vy + vh;
       const t = tries.find((c) => !hit(c[3]));
       if (!t) return;
       placed.push(t[3]);
-      texts += '<text x="' + t[0].toFixed(1) + '" y="' + t[1].toFixed(1) + '" text-anchor="' + t[2] + '" class="stop-label' + (L.strong ? ' strong' : '') +
-        '" font-size="' + fs.toFixed(1) + '" stroke-width="' + (3.4 * u).toFixed(1) + '">' + esc(L.text) + '</text>';
+      labelBoxes.push(t[3]);
+      texts += '<text x="' + t[0].toFixed(1) + '" y="' + t[1].toFixed(1) + '" text-anchor="' + t[2] + '" class="stop-label' + (strong ? ' strong' : '') +
+        '" font-size="' + fs.toFixed(1) + '" stroke-width="' + (3.4 * u).toFixed(1) + '">' + esc(text) + '</text>';
+    });
+
+    // 4) 組 SVG
+    let s = '<svg class="trip-svg" viewBox="' + opts.vb.join(' ') + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="路線圖">';
+    s += '<rect x="' + vx + '" y="' + vy + '" width="' + vw + '" height="' + vh + '" fill="' + SEA + '"/>';
+    s += m.prefs.map((p) => '<path d="' + p.d + '" fill="' + (PREF_FILL[p.n] || '#ebe6dc') + '" stroke="#fffdf8" stroke-width="' + (2.2 * u).toFixed(1) + '" stroke-linejoin="round"/>').join('');
+
+    // 縣名：避開路線、地點和地點名稱
+    const obs = { segs: [], circles: [], boxes: labelBoxes };
+    routes.filter((rt) => !focus || rt.d.n === focus).forEach((rt) => {
+      for (let i = 1; i < rt.xy.length; i++) obs.segs.push([rt.xy[i - 1][0], rt.xy[i - 1][1], rt.xy[i][0], rt.xy[i][1]]);
+    });
+    spots.forEach((sp) => { if (sp.kind !== 'grey') obs.circles.push([sp.x, sp.y, sp.r + 2 * u]); });
+    const pfs = 17 * u;
+    m.prefs.forEach((p) => {
+      const L = LABEL_PREFS[p.n];
+      if (!L) return;
+      const best = placePrefLabel(p, opts.vb, obs, pfs * 1.6);
+      if (!best || best.d < pfs * 0.55) return;
+      s += '<text x="' + best.x.toFixed(1) + '" y="' + (best.y + pfs * 0.35).toFixed(1) + '" class="pref-label" fill="' + L.color + '" font-size="' + pfs.toFixed(1) + '" letter-spacing="' + (2 * u).toFixed(1) + '">' + L.name + '</text>';
+    });
+
+    // 路線：沒被選的先畫（灰），選到的最後畫在最上面
+    routes.slice().sort((a, b) => (a.d.n === focus) - (b.d.n === focus)).forEach((rt) => {
+      const dim = focus && rt.d.n !== focus;
+      const attrs = ' data-route-day="' + rt.d.n + '" d="' + pathD(rt.line || rt.d.pts.map((p) => p.ll)) + '"';
+      s += '<path class="route-hit"' + attrs + ' stroke-width="' + (16 * u).toFixed(1) + '"/>';
+      s += '<path class="route' + (rt.line ? '' : ' pending') + (dim ? ' dim' : '') + '"' + attrs +
+        ' stroke="' + (dim ? '#a9a197' : color(rt.d.n)) + '" stroke-width="' + ((dim ? 2.4 : 4) * u).toFixed(1) + '"' +
+        (rt.line ? '' : ' stroke-dasharray="' + (6 * u).toFixed(1) + ' ' + (6 * u).toFixed(1) + '"') + '/>';
+    });
+
+    // 點：被拉開的點用細線連回真正的位置
+    const circle = (x, y, r, fill, stroke, sw, extra) =>
+      '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(1) + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + sw.toFixed(1) + '"' + (extra || '') + '/>';
+    let dots = '';
+    spots.forEach((sp) => {
+      if (sp.kind === 'grey') { dots += circle(sp.x, sp.y, sp.r, '#fffdf8', '#a9a197', 1.4 * u); return; }
+      if (Math.hypot(sp.x - sp.ox, sp.y - sp.oy) > 1) {
+        dots += '<line x1="' + sp.ox.toFixed(1) + '" y1="' + sp.oy.toFixed(1) + '" x2="' + sp.x.toFixed(1) + '" y2="' + sp.y.toFixed(1) + '" stroke="#2b2622" stroke-width="' + (1.2 * u).toFixed(1) + '" stroke-linecap="round"/>' +
+          circle(sp.ox, sp.oy, 2.2 * u, '#2b2622', '#fff', 0.8 * u);
+      }
+      if (sp.kind === 'alt') { dots += circle(sp.x, sp.y, sp.r, '#fffdf8', '#8a8178', 1.4 * u, ' stroke-dasharray="' + (2.5 * u).toFixed(1) + ' ' + (2 * u).toFixed(1) + '"'); return; }
+      const p = sp.p, d = sp.d;
+      if (numbered) {
+        dots += circle(sp.x, sp.y, sp.r, p.start ? '#2b2622' : color(d.n), '#fff', 2 * u);
+        const num = p.start ? '起' : String(d.pts[0].start ? sp.i : sp.i + 1);
+        dots += '<text x="' + sp.x.toFixed(1) + '" y="' + (sp.y + 3.6 * u).toFixed(1) + '" class="pin-num" font-size="' + (10 * u).toFixed(1) + '">' + num + '</text>';
+      } else {
+        dots += circle(sp.x, sp.y, sp.r, p.stay ? color(d.n) : '#fffdf8', p.stay ? '#fff' : color(d.n), (p.stay ? 1.6 : 1.8) * u);
+      }
     });
 
     return s + dots + texts + '</svg>';
@@ -228,5 +316,8 @@
     });
   }
 
-  window.TripMap = { render: render, hydrate: hydrate, fitVB: fitVB, color: color };
+  // 已經算好的路線（地圖座標點），沒有就回傳 null
+  function routeOf(lls) { return cachedRoute(lls); }
+
+  window.TripMap = { render: render, hydrate: hydrate, fitVB: fitVB, color: color, routeOf: routeOf };
 })();

@@ -261,6 +261,8 @@
   let mapMode = 'simple';
   try { mapMode = localStorage.getItem('tohoku-map-mode') || 'simple'; } catch (e) { /* ignore */ }
   let overviewDay = 0; // 0 = 全程
+  let ovOpen = true;
+  try { ovOpen = localStorage.getItem('tohoku-ov-open') !== '0'; } catch (e) { /* ignore */ }
 
   // 起點是前一晚的住宿，接著是當天有座標的地點（備案另外標示，不連線）
   function dayPoints(n) {
@@ -298,7 +300,7 @@
     return 'https://www.google.com/maps/dir/?api=1&travelmode=driving&origin=' + encodeURIComponent(placeOf(pts[0])) +
       '&destination=' + encodeURIComponent(placeOf(pts[pts.length - 1])) + (mid ? '&waypoints=' + encodeURIComponent(mid) : '');
   }
-  function googleEmbedUrl(pts) {
+  function googleEmbedUrl(pts, fit) {
     const key = CFG.GOOGLE_MAPS_EMBED_KEY;
     if (key) {
       const ll = (p) => p.ll.join(',');
@@ -306,7 +308,8 @@
       if (pts.length === 1) return base + 'place?key=' + encodeURIComponent(key) + '&q=' + ll(pts[0]) + '&language=zh-TW';
       const mid = pts.slice(1, -1).map(ll).join('|');
       return base + 'directions?key=' + encodeURIComponent(key) + '&mode=driving&language=zh-TW&origin=' + ll(pts[0]) +
-        '&destination=' + ll(pts[pts.length - 1]) + (mid ? '&waypoints=' + encodeURIComponent(mid) : '');
+        '&destination=' + ll(pts[pts.length - 1]) + (mid ? '&waypoints=' + encodeURIComponent(mid) : '') +
+        (fit ? '&zoom=' + fit.zoom + '&center=' + fit.center : '');
     }
     // 沒有金鑰時用舊版免金鑰嵌入；地名常找不到路線，所以用座標
     const loc = (p) => p.ll.join(',');
@@ -314,9 +317,36 @@
     return 'https://maps.google.com/maps?saddr=' + loc(pts[0]) + '&daddr=' + pts.slice(1).map(loc).join('+to:') + '&dirflg=d&hl=zh-TW&output=embed';
   }
 
+  // Google 嵌入版地圖左上角一定會有「起點／終點」資訊卡，沒辦法關掉。
+  // 做法：iframe 比顯示區域高一截、往上推，把資訊卡裁掉，並自己算中心點和縮放，讓整段路線落在看得到的範圍內。
+  const GM_CROP = 120;
+  function gmFit(pts, w, h) {
+    const lls = [].concat(...[TripMap.routeOf(pts.map((p) => p.ll)) || pts.map((p) => p.ll)]);
+    const mx = (lng) => (lng + 180) / 360;
+    const my = (lat) => (0.5 - Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) / (2 * Math.PI));
+    const xs = lls.map((l) => mx(l[1])), ys = lls.map((l) => my(l[0]));
+    const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+    const pad = 36;
+    const need = Math.min((w - pad * 2) / (Math.max(x1 - x0, 1e-6) * 256), (h - pad * 2) / (Math.max(y1 - y0, 1e-6) * 256));
+    const zoom = Math.max(3, Math.min(15, Math.floor(Math.log2(need))));
+    const world = 256 * Math.pow(2, zoom);
+    const cx = ((x0 + x1) / 2) * world, cy = ((y0 + y1) / 2) * world - GM_CROP / 2;
+    const lng = (cx / world) * 360 - 180;
+    const n = Math.PI - (2 * Math.PI * cy) / world;
+    const lat = (180 / Math.PI) * Math.atan(Math.sinh(n));
+    return { zoom: zoom, center: lat.toFixed(5) + ',' + lng.toFixed(5) };
+  }
+  function buildGoogle(box) {
+    const iframe = box.querySelector('iframe');
+    if (!iframe) return;
+    const dm = dayPoints(Number(box.dataset.day));
+    const fit = CFG.GOOGLE_MAPS_EMBED_KEY && dm.pts.length >= 2 ? gmFit(dm.pts, box.clientWidth || 360, box.clientHeight || 320) : null;
+    iframe.src = googleEmbedUrl(dm.pts, fit);
+  }
   function dayMapInner(dm, all) {
     if (mapMode === 'google') {
-      return '<iframe class="gmap" src="' + esc(googleEmbedUrl(dm.pts)) + '" title="Google 地圖路線" allowfullscreen></iframe>';
+      const crop = CFG.GOOGLE_MAPS_EMBED_KEY && dm.pts.length >= 2;
+      return '<div class="gmap-box' + (crop ? ' crop' : '') + '" data-day="' + dm.n + '"><iframe class="gmap" title="Google 地圖路線" allowfullscreen></iframe></div>';
     }
     const lls = dm.pts.concat(dm.alts).map((p) => p.ll);
     return TripMap.render(all, { vb: TripMap.fitVB(lls, 60, 4 / 3, 300), focus: dm.n, numbers: true });
@@ -328,12 +358,15 @@
         const n = Number(d['Day']);
         return '<button class="ov-chip' + (overviewDay === n ? ' active' : '') + '" data-ov="' + n + '" style="--dc:' + TripMap.color(n) + '"><i></i>D' + n + '</button>';
       }).join('');
-    return '<section class="card overview">' +
-      '<div class="section-title"><h2>全程路線</h2><p>點 Day 看那天開哪一段</p></div>' +
+    return '<section class="card overview' + (ovOpen ? '' : ' is-closed') + '">' +
+      '<button class="ov-toggle" data-ovtoggle aria-expanded="' + ovOpen + '"><h2>全程路線</h2>' +
+      '<span class="ov-hint">' + (ovOpen ? '點 Day 看那天開哪一段' : '點開來看 7 天的路線') + '</span>' +
+      '<svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>' +
+      '<div class="ov-body">' +
       '<div class="ov-chips">' + chips + '</div>' +
       '<div class="ov-map" id="ov-map">' + overviewMap(all) + '</div>' +
       '<p class="ov-note" id="ov-note">' + overviewNote(days) + '</p>' +
-      '</section>';
+      '</div></section>';
   }
   function overviewMap(all) {
     const lls = [].concat(...all.map((d) => d.pts.concat(d.alts).map((p) => p.ll)));
@@ -364,11 +397,15 @@
     const all = allDayPoints();
     box.innerHTML = dayMapInner(dayPoints(currentDay), all);
     box.classList.toggle('is-google', mode === 'google');
+    const gb = box.querySelector('.gmap-box');
+    if (gb) buildGoogle(gb);
     document.querySelectorAll('[data-mapmode]').forEach((b) => b.classList.toggle('active', b.dataset.mapmode === mode));
     if (mode === 'simple') TripMap.hydrate(box, all);
   }
   function hydrateMaps() {
     const all = allDayPoints();
+    const gb = document.querySelector('#day-map .gmap-box');
+    if (gb) buildGoogle(gb);
     ['#ov-map', '#day-map'].forEach((sel) => { const el = $(sel); if (el && el.querySelector('svg')) TripMap.hydrate(el, all); });
   }
 
@@ -657,6 +694,16 @@
       return;
     }
     if (e.target.id === 'lightbox' || e.target.classList.contains('lb-figure')) { closeLightbox(); return; }
+    const ovT = e.target.closest('[data-ovtoggle]');
+    if (ovT) {
+      ovOpen = !ovOpen;
+      try { localStorage.setItem('tohoku-ov-open', ovOpen ? '1' : '0'); } catch (err) { /* ignore */ }
+      const card = ovT.closest('.overview');
+      card.classList.toggle('is-closed', !ovOpen);
+      ovT.setAttribute('aria-expanded', ovOpen);
+      ovT.querySelector('.ov-hint').textContent = ovOpen ? '點 Day 看那天開哪一段' : '點開來看 7 天的路線';
+      return;
+    }
     const ov = e.target.closest('[data-ov]');
     if (ov) { setOverviewDay(Number(ov.dataset.ov)); return; }
     const routeEl = e.target.closest('#ov-map [data-route-day]');
