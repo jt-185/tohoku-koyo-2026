@@ -52,13 +52,13 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 700; margin: 0; letter-spac
 .subtitle { margin: 10px 0 0; color: var(--ink-2); font-family: var(--serif); font-size: 16px; }
 .meta { margin: 18px 0 0; font-size: 14px; color: var(--ink-2); }
 .countdown {
-  display: inline-flex; align-items: baseline; gap: 6px;
-  margin: 18px 0 0; padding: 8px 16px;
+  display: inline-flex; align-items: center; gap: 6px;
+  margin: 18px 0 0; padding: 0 18px; height: 40px;
   border-radius: 999px; background: var(--ink); color: var(--paper);
-  font-size: 14px;
+  font-size: 14px; line-height: 1;
 }
 .countdown:empty { display: none; }
-.countdown b { font-family: var(--serif); font-size: 22px; color: #f2b48f; }
+.countdown b { font-family: var(--serif); font-size: 22px; line-height: 1; color: #f2b48f; }
 .notice {
   margin: 16px 0 0; padding: 10px 14px; border-left: 3px solid var(--maple);
   background: rgba(255, 253, 248, .7); border-radius: 0 8px 8px 0; font-size: 14px; color: var(--ink-2);
