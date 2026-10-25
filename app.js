@@ -138,6 +138,11 @@
   }
 
   // ── data loading ──
+  // 照片彈窗或路線圖開著時不重畫，等關掉後再更新
+  let pendingRender = false;
+  function busyViewing() {
+    return ['lightbox', 'route-modal'].some((id) => { const el = document.getElementById(id); return el && !el.hidden; });
+  }
   async function load() {
     try {
       const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
@@ -149,8 +154,13 @@
       const res = await fetch(url, { cache: 'no-store' });
       const json = await res.json();
       if (!json.sheets) throw new Error('no data');
+      const before = data ? JSON.stringify(data.sheets) : '';
+      const changed = before && before !== JSON.stringify(json.sheets);
       data = json;
       source = CFG.SCRIPT_URL ? 'live' : 'backup';
+      if (before && !changed) { renderFooter(); return; }
+      if (changed && busyViewing()) { pendingRender = true; return; }
+      if (changed) toast('內容有更新，已自動刷新');
       try { localStorage.setItem(CACHE_KEY, JSON.stringify(json)); } catch (e) { /* ignore */ }
     } catch (err) {
       if (!data) {
@@ -950,7 +960,39 @@
     const heroH = document.querySelector('.hero').offsetHeight;
     if (window.scrollY > heroH) window.scrollTo({ top: heroH });
   });
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && data) load(); });
+  // 回到網頁、或開著不動時，定期檢查內容與網站版本有沒有更新
+  const runningVer = (() => {
+    const s = document.querySelector('script[src^="app.js"]');
+    const m = s && /[?&]v=([^&]+)/.exec(s.getAttribute('src'));
+    return m ? m[1] : '';
+  })();
+  let verNoticed = false;
+  async function checkVersion() {
+    if (verNoticed || !runningVer) return;
+    try {
+      const res = await fetch('index.html?_=' + Date.now(), { cache: 'no-store' });
+      const m = /app\.js\?v=([^"'&]+)/.exec(await res.text());
+      if (!m || m[1] === runningVer) return;
+      verNoticed = true;
+      const bar = document.createElement('div');
+      bar.className = 'toast toast-update';
+      bar.innerHTML = '網站有新版本 <button type="button">更新</button>';
+      bar.querySelector('button').addEventListener('click', () => location.reload());
+      document.body.appendChild(bar);
+    } catch (e) { /* offline */ }
+  }
+  function refresh() {
+    if (document.visibilityState !== 'visible' || !data) return;
+    load();
+    checkVersion();
+  }
+  document.addEventListener('visibilitychange', refresh);
+  setInterval(refresh, 5 * 60 * 1000);
+  document.addEventListener('click', (e) => {
+    if (pendingRender && e.target.closest('[data-lb="close"], [data-rm="close"], .lightbox, .route-modal')) {
+      setTimeout(() => { if (!busyViewing()) { pendingRender = false; renderAll(); } }, 300);
+    }
+  });
 
   // ── 封面飄落的楓葉 ──
   function initLeaves() {

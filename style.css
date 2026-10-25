@@ -628,3 +628,7 @@ body::after {
 .deleg-note { margin: 8px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--sky); }
 .deleg-note b { font-weight: 700; }
 @media (max-width: 600px) { .person.delegated .box { font-size: 9px; } }
+
+/* 網站有新版本的提示 */
+.toast-update { display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 16px; white-space: nowrap; }
+.toast-update button { border: 0; border-radius: 999px; background: var(--paper); color: var(--ink); font: inherit; font-weight: 700; padding: 4px 14px; cursor: pointer; }
