@@ -570,7 +570,7 @@
           const m = x.match(/^(託運|手提|個人物品)\s*(.*)$/);
           const k = m ? m[1] : '', v = m ? m[2] : x;
           const many = k === '託運' && /([2-9])\s*件/.test(v);
-          return '<span class="bag' + (many ? ' bag-hl' : '') + '"><small>' + esc(k) + '</small><b>' + esc(v) + '</b>' + (many ? '<em>可託運 ' + v.match(/([2-9])\s*件/)[1] + ' 件</em>' : '') + '</span>';
+          return '<span class="bag' + (many ? ' bag-hl' : '') + '"><small>' + esc(k) + '</small><b>' + esc(v) + '</b>' + '</span>';
         }).join('') + '</div>' : '') +
         '</article>';
     };
