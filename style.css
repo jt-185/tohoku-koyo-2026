@@ -655,17 +655,6 @@ body::after {
 .tile-go svg { width: 13px; height: 13px; fill: currentColor; stroke: none; }
 @media (max-width: 380px) { .tile-time { font-size: 23px; } .tile-t { font-size: 17px; } }
 
-/* 航廈提示、行李按鈕 */
-.flight-end .place mark.terminal { background: var(--maple); color: #fff; font-weight: 700; padding: 1px 8px; border-radius: 999px; margin-left: 2px; }
-.flight-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.flight-foot .bag-k { font-size: 12px; color: var(--ink-3); letter-spacing: .06em; margin-right: 2px; }
-.bag { display: inline-flex; align-items: baseline; gap: 5px; padding: 2px 10px; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); font-size: 12.5px; line-height: 1.5; }
-.bag small { font-size: 11.5px; color: var(--ink-3); }
-.bag b { font-weight: 700; color: var(--ink); }
-.bag-hl { border-color: var(--maple); background: var(--maple-soft); }
-.bag-hl small { color: var(--maple); }
-@media (max-width: 480px) {
-  .flight-foot { gap: 6px; }
-  .flight-foot .bag-k { display: none; }
-  .bag { padding: 1px 9px; gap: 4px; font-size: 12px; }
-}
+/* 航廈提示、回程託運 2 件標色 */
+.flight-end .place mark.terminal { background: none; color: var(--maple); font-weight: 700; padding: 0; margin-left: 2px; }
+.flight-foot .bag-more { color: var(--maple); }

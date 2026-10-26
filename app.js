@@ -566,12 +566,7 @@
         '<div class="flight-route">' + end(fromPlace, fromTime, 'from') +
         '<div class="flight-mid">' + (dur ? '<span class="dur">' + esc(dur) + '</span>' : '') + ICON.plane + '</div>' +
         end(toPlace, toTime, 'to') + '</div>' +
-        (get(g, '行李') ? '<div class="flight-foot"><span class="bag-k">行李</span>' + get(g, '行李').split(/[、,，]/).map((x) => x.trim()).filter(Boolean).map((x) => {
-          const m = x.match(/^(託運|手提|個人物品)\s*(.*)$/);
-          const k = m ? m[1] : '', v = m ? m[2] : x;
-          const many = k === '託運' && /([2-9])\s*件/.test(v);
-          return '<span class="bag' + (many ? ' bag-hl' : '') + '"><small>' + esc(k) + '</small><b>' + esc(v) + '</b>' + '</span>';
-        }).join('') + '</div>' : '') +
+        (get(g, '行李') ? '<div class="flight-foot">行李：' + esc(get(g, '行李')).replace(/(託運\s*[2-9]\s*件)/, '<b class="bag-more">$1</b>') + '</div>' : '') +
         '</article>';
     };
 
