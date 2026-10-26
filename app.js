@@ -625,7 +625,7 @@
 
     return '<div class="section-title"><h2>航班</h2><p>星宇航空</p></div>' +
       '<div class="stack">' + flight('去程') + flight('回程') + '</div>' +
-      (shuttle ? '<div class="section-title spaced"><h2>機場接駁</h2><p>台灣段</p></div><article class="card">' + (shuttleBtns ? '<div class="tiles">' + shuttleBtns + '</div>' : '') + (shuttleKv ? '<dl class="kv">' + shuttleKv + '</dl>' : '') + '</article>' : '') +
+      (shuttle ? '<div class="section-title spaced"><h2>機場接駁</h2><p>台灣段</p></div><article class="card">' + (shuttleBtns ? '<div class="tiles tiles-col">' + shuttleBtns + '</div>' : '') + (shuttleKv ? '<dl class="kv">' + shuttleKv + '</dl>' : '') + '</article>' : '') +
       ((car || carBtns) ? '<div class="section-title spaced"><h2>租車</h2></div><article class="card">' + carCover + (carBtns ? '<div class="tiles">' + carBtns + '</div>' : '') + (car ? '<dl class="kv">' + car + '</dl>' : '') + '</article>' : '') +
       (drive ? '<div class="section-title spaced"><h2>開車時間</h2><p>Google 地圖</p></div><p class="hint">點一段路線，Google 地圖會從你目前的位置導航到目的地。</p>' +
         '<article class="card"><ul class="drive-list">' + drive + '</ul></article>' : '');

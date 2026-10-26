@@ -658,3 +658,6 @@ body::after {
 /* 航廈提示、回程託運 2 件標色 */
 .flight-end .place mark.terminal { background: none; color: var(--maple); font-weight: 700; padding: 0; margin-left: 2px; }
 .flight-foot .bag-more { color: var(--maple); }
+
+/* 機場接駁：去程、回程上下排列 */
+.tiles-col { grid-template-columns: 1fr; }
