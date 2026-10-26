@@ -576,7 +576,7 @@
     const carPic = carRows.find((r) => r['項目'] === '圖片');
     const carCover = carPic ? coverHtml(get('租車', '車款') || '租車', parseImages(extra(carPic))) : '';
     // 租車：公司（可導航）、車款、取車、還車做成大按鈕，其餘（注意…）照一般列表
-    const dateTime = (v) => { const m = String(v || '').match(/^(\d+\/\d+（.）)\s*(.*)$/); return m ? { d: m[1], t: m[2] } : { d: '', t: String(v || '') }; };
+    const dateTime = (v) => { const m = String(v || '').trim().match(/^(\d+\/\d+\s*[（(].[）)])\s*([\s\S]*)$/); return m ? { d: m[1], t: m[2] } : { d: '', t: String(v || '') }; };
     const dtTile = (label, v, cls) => { const x = dateTime(v); return '<div class="tile ' + (cls || '') + '"><span class="tile-k">' + label + '</span>' + (x.d ? '<b class="tile-d">' + esc(x.d) + '</b>' : '') + '<span class="tile-t">' + esc(x.t) + '</span></div>'; };
     const carCo = carRows.find((r) => r['項目'] === '公司');
     const carBtns = carRows.length ? (
@@ -592,9 +592,9 @@
     const shTrip = (k) => {
       const r = shRows.find((x) => x['項目'] === k);
       if (!r) return '';
-      const m = String(r['內容']).match(/^(\d+\/\d+（.）)\s*(\d{1,2}:\d{2})\s*(.*)$/);
+      const m = String(r['內容']).trim().match(/^(\d+\/\d+\s*[（(].[）)])\s*(\d{1,2}:\d{2})\s*([\s\S]*)$/);
       if (!m) return '<div class="tile tile-wide"><span class="tile-k">' + esc(k) + '</span><span class="tile-t">' + esc(r['內容']) + '</span></div>';
-      return '<div class="tile"><span class="tile-k">' + esc(k) + '</span><b class="tile-d">' + esc(m[1]) + '</b><span class="tile-time">' + esc(m[2]) + '</span><span class="tile-sub">' + esc(m[3]) + '</span></div>';
+      return '<div class="tile"><span class="tile-k">' + esc(k) + '</span><b class="tile-d">' + esc(m[1]) + '</b><span class="tile-time">' + esc(m[2]) + '</span><span class="tile-sub">' + esc(m[3]).replace(/\n/g, '<br>') + '</span></div>';
     };
     const shuttleBtns = shTrip('去程') + shTrip('回程');
     const shuttleKv = shRows.filter((r) => !['去程', '回程'].includes(r['項目'])).map((r) => '<dt>' + esc(r['項目']) + '</dt><dd>' + txt(r['內容']) + '</dd>').join('');
