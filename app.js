@@ -576,6 +576,7 @@
     const carPic = carRows.find((r) => r['項目'] === '圖片');
     const carCover = carPic ? coverHtml(get('租車', '車款') || '租車', parseImages(extra(carPic))) : '';
     const car = carRows.filter((r) => r !== carPic).map((r) => '<dt>' + esc(r['項目']) + '</dt><dd>' + txt(r['內容']) + '</dd>').join('');
+    const shuttle = (groups['機場接駁'] || []).map((r) => '<dt>' + esc(r['項目']) + '</dt><dd>' + txt(r['內容']) + '</dd>').join('');
     // 「約 1.5 小時・97 公里」拆成時間和公里數標籤
     const driveMeta = (text) => {
       const [t, km] = String(text || '').split('・').map((x) => x.trim());
@@ -602,6 +603,7 @@
 
     return '<div class="section-title"><h2>航班</h2><p>星宇航空</p></div>' +
       '<div class="stack">' + flight('去程') + flight('回程') + '</div>' +
+      (shuttle ? '<div class="section-title spaced"><h2>機場接駁</h2><p>台灣段</p></div><article class="card"><dl class="kv">' + shuttle + '</dl></article>' : '') +
       (car ? '<div class="section-title spaced"><h2>租車</h2></div><article class="card">' + carCover + '<dl class="kv">' + car + '</dl></article>' : '') +
       (drive ? '<div class="section-title spaced"><h2>開車時間</h2><p>Google 地圖</p></div><p class="hint">點一段路線，Google 地圖會從你目前的位置導航到目的地。</p>' +
         '<article class="card"><ul class="drive-list">' + drive + '</ul></article>' : '');
