@@ -658,11 +658,3 @@ body::after {
 /* 航廈提示、回程託運 2 件標色 */
 .flight-end .place mark.terminal { background: none; color: var(--maple); font-weight: 700; padding: 0; margin-left: 2px; }
 .flight-foot .bag-more { color: var(--maple); }
-
-/* 機場接駁：去程、回程上下排列 */
-.tiles-col { grid-template-columns: 1fr; }
-.tiles-col .tile { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "k time" "d time" "sub sub"; column-gap: 12px; row-gap: 2px; align-items: center; padding: 12px 16px 13px; }
-.tiles-col .tile-k { grid-area: k; align-self: end; }
-.tiles-col .tile-d { grid-area: d; align-self: start; font-size: 17px; }
-.tiles-col .tile-time { grid-area: time; font-size: 34px; line-height: 1; text-align: right; }
-.tiles-col .tile-sub { grid-area: sub; margin-top: 9px; padding-top: 9px; border-top: 1px dashed var(--line); font-size: 13px; }
