@@ -646,7 +646,7 @@ body::after {
 .tile-t { font: 700 20px/1.3 var(--serif); color: var(--maple); }
 .tile-time { font: 700 26px/1.2 var(--serif); color: var(--maple); }
 .tile-sub { font-size: 12.5px; color: var(--ink-2); line-height: 1.45; }
-.tile-link { position: relative; padding-right: 86px; border-color: var(--maple-soft); background: var(--maple-soft); }
+.tile-link { position: relative; padding-right: 86px; }
 .tile-link:hover { border-color: var(--maple); }
 .tile-go {
   position: absolute; right: 12px; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; gap: 4px;
