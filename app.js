@@ -551,7 +551,7 @@
       const end = (place, time, cls) => {
         const parts = String(place || '').trim().split(/\s+/);
         return '<div class="flight-end ' + cls + '"><div class="code">' + esc(parts[0]) + '</div>' +
-          '<div class="time">' + esc(time || '') + '</div><div class="place">' + esc(parts.slice(1).join(' ')) + '</div></div>';
+          '<div class="time">' + esc(time || '') + '</div><div class="place">' + esc(parts.slice(1).join(' ')).replace(/(第.航廈)/, '<mark class="terminal">$1</mark>') + '</div></div>';
       };
       // 「星宇航空 JX862」→ 航空公司＋班次；星宇用官方 logo
       const fm = get(g, '航班').match(/^(.*?)\s*([A-Z0-9]{2}\s?\d{1,4})$/);
@@ -566,7 +566,12 @@
         '<div class="flight-route">' + end(fromPlace, fromTime, 'from') +
         '<div class="flight-mid">' + (dur ? '<span class="dur">' + esc(dur) + '</span>' : '') + ICON.plane + '</div>' +
         end(toPlace, toTime, 'to') + '</div>' +
-        (get(g, '行李') ? '<div class="flight-foot">行李：' + esc(get(g, '行李')) + '</div>' : '') +
+        (get(g, '行李') ? '<div class="flight-foot"><span class="bag-k">行李</span>' + get(g, '行李').split(/[、,，]/).map((x) => x.trim()).filter(Boolean).map((x) => {
+          const m = x.match(/^(託運|手提|個人物品)\s*(.*)$/);
+          const k = m ? m[1] : '', v = m ? m[2] : x;
+          const many = k === '託運' && /([2-9])\s*件/.test(v);
+          return '<span class="bag' + (many ? ' bag-hl' : '') + '"><small>' + esc(k) + '</small><b>' + esc(v) + '</b>' + (many ? '<em>可託運 ' + v.match(/([2-9])\s*件/)[1] + ' 件</em>' : '') + '</span>';
+        }).join('') + '</div>' : '') +
         '</article>';
     };
 
