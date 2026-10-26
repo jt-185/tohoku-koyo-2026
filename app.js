@@ -575,8 +575,30 @@
     const carRows = groups['租車'] || [];
     const carPic = carRows.find((r) => r['項目'] === '圖片');
     const carCover = carPic ? coverHtml(get('租車', '車款') || '租車', parseImages(extra(carPic))) : '';
-    const car = carRows.filter((r) => r !== carPic).map((r) => '<dt>' + esc(r['項目']) + '</dt><dd>' + txt(r['內容']) + '</dd>').join('');
-    const shuttle = (groups['機場接駁'] || []).map((r) => '<dt>' + esc(r['項目']) + '</dt><dd>' + txt(r['內容']) + '</dd>').join('');
+    // 租車：公司（可導航）、車款、取車、還車做成大按鈕，其餘（注意…）照一般列表
+    const dateTime = (v) => { const m = String(v || '').match(/^(\d+\/\d+（.）)\s*(.*)$/); return m ? { d: m[1], t: m[2] } : { d: '', t: String(v || '') }; };
+    const dtTile = (label, v, cls) => { const x = dateTime(v); return '<div class="tile ' + (cls || '') + '"><span class="tile-k">' + label + '</span>' + (x.d ? '<b class="tile-d">' + esc(x.d) + '</b>' : '') + '<span class="tile-t">' + esc(x.t) + '</span></div>'; };
+    const carCo = carRows.find((r) => r['項目'] === '公司');
+    const carBtns = carRows.length ? (
+      (carCo ? ((carCo['導航／圖片'] || carCo['導航'])
+        ? '<a class="tile tile-wide tile-link" href="' + esc(navUrl(carCo['導航／圖片'] || carCo['導航'])) + '" target="_blank" rel="noopener"><span class="tile-k">租車公司</span><b class="tile-v">' + esc(carCo['內容']) + '</b><span class="tile-go">' + ICON.nav + '導航</span></a>'
+        : '<div class="tile tile-wide"><span class="tile-k">租車公司</span><b class="tile-v">' + esc(carCo['內容']) + '</b></div>') : '') +
+      (get('租車', '車款') ? '<div class="tile tile-wide"><span class="tile-k">車款</span><b class="tile-v">' + esc(get('租車', '車款')) + '</b></div>' : '') +
+      (get('租車', '取車') ? dtTile('取車', get('租車', '取車')) : '') +
+      (get('租車', '還車') ? dtTile('還車', get('租車', '還車')) : '')) : '';
+    const car = carRows.filter((r) => r !== carPic && !['公司', '車款', '取車', '還車'].includes(r['項目'])).map((r) => '<dt>' + esc(r['項目']) + '</dt><dd>' + txt(r['內容']) + '</dd>').join('');
+    // 機場接駁：去程／回程的日期、時間做成大按鈕，人數、車型照一般列表
+    const shRows = groups['機場接駁'] || [];
+    const shTrip = (k) => {
+      const r = shRows.find((x) => x['項目'] === k);
+      if (!r) return '';
+      const m = String(r['內容']).match(/^(\d+\/\d+（.）)\s*(\d{1,2}:\d{2})\s*(.*)$/);
+      if (!m) return '<div class="tile tile-wide"><span class="tile-k">' + esc(k) + '</span><span class="tile-t">' + esc(r['內容']) + '</span></div>';
+      return '<div class="tile"><span class="tile-k">' + esc(k) + '</span><b class="tile-d">' + esc(m[1]) + '</b><span class="tile-time">' + esc(m[2]) + '</span><span class="tile-sub">' + esc(m[3]) + '</span></div>';
+    };
+    const shuttleBtns = shTrip('去程') + shTrip('回程');
+    const shuttleKv = shRows.filter((r) => !['去程', '回程'].includes(r['項目'])).map((r) => '<dt>' + esc(r['項目']) + '</dt><dd>' + txt(r['內容']) + '</dd>').join('');
+    const shuttle = shuttleBtns + shuttleKv;
     // 「約 1.5 小時・97 公里」拆成時間和公里數標籤
     const driveMeta = (text) => {
       const [t, km] = String(text || '').split('・').map((x) => x.trim());
@@ -603,8 +625,8 @@
 
     return '<div class="section-title"><h2>航班</h2><p>星宇航空</p></div>' +
       '<div class="stack">' + flight('去程') + flight('回程') + '</div>' +
-      (shuttle ? '<div class="section-title spaced"><h2>機場接駁</h2><p>台灣段</p></div><article class="card"><dl class="kv">' + shuttle + '</dl></article>' : '') +
-      (car ? '<div class="section-title spaced"><h2>租車</h2></div><article class="card">' + carCover + '<dl class="kv">' + car + '</dl></article>' : '') +
+      (shuttle ? '<div class="section-title spaced"><h2>機場接駁</h2><p>台灣段</p></div><article class="card">' + (shuttleBtns ? '<div class="tiles">' + shuttleBtns + '</div>' : '') + (shuttleKv ? '<dl class="kv">' + shuttleKv + '</dl>' : '') + '</article>' : '') +
+      ((car || carBtns) ? '<div class="section-title spaced"><h2>租車</h2></div><article class="card">' + carCover + (carBtns ? '<div class="tiles">' + carBtns + '</div>' : '') + (car ? '<dl class="kv">' + car + '</dl>' : '') + '</article>' : '') +
       (drive ? '<div class="section-title spaced"><h2>開車時間</h2><p>Google 地圖</p></div><p class="hint">點一段路線，Google 地圖會從你目前的位置導航到目的地。</p>' +
         '<article class="card"><ul class="drive-list">' + drive + '</ul></article>' : '');
   }
