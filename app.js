@@ -650,7 +650,7 @@
         '<a class="btn" href="' + esc(navUrl(s['日文'] || s['名稱'])) + '" target="_blank" rel="noopener">' + ICON.nav + '導航</a></div>' +
         '</article>';
     }).join('');
-    return '<div class="section-title"><h2>景點介紹</h2><p>🍁 為 2026 見頃預測</p></div>' +
+    return '<div class="section-title"><h2>景點介紹</h2><p>🍁 2026 見頃預測' + (settings()['紅葉更新'] ? '・' + esc(settings()['紅葉更新']) + ' 更新' : '') + '</p></div>' +
       '<div class="filters">' + tabs.map((t) => '<button class="filter' + (t === spotFilter ? ' active' : '') + '" data-filter="' + t + '">' + t + '</button>').join('') + '</div>' +
       '<div class="stack">' + cards + '</div>';
   }
