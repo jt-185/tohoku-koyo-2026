@@ -291,7 +291,7 @@
         '<div class="day-corner"><b class="seg-day">DAY ' + esc(day['Day']) + '</b><span class="seg-date">' + esc(day['日期']) + '</span><span class="seg-nights">週' + esc(day['星期']) + '</span></div>' +
         '<h2>' + esc(day['標題']) + '</h2>' +
         '<p class="route">' + ICON.map + '<span>' + esc(day['路線']) + '</span></p>' +
-        '<div class="wx" data-wx-day="' + currentDay + '">' + wxInner(currentDay) + '</div>' +
+        '<div class="wx' + (wxShowPop ? ' show-pop' : '') + '" data-wx-day="' + currentDay + '">' + wxInner(currentDay) + '</div>' +
         (facts ? '<div class="day-facts">' + facts + '</div>' : '') +
         mapHtml +
         (list ? '<ol class="timeline">' + list + '</ol>' : '') +
@@ -333,7 +333,7 @@
     return { n: n, pts: pts, alts: alts };
   }
   // 天氣：Open-Meteo 每日預報（最多 16 天），整趟一次抓，一小時內不重抓
-  let wx = null, wxAt = 0, wxBusy = false;
+  let wx = null, wxAt = 0, wxBusy = false, wxShowPop = false, wxLastTap = 0;
   const WX_DAYS = 16;
   // 天氣代碼取的是一天中最差的時段，降雨機率低時改顯示雲，避免小雨圖示配 6% 降雨
   function wxIcon(c, p) {
@@ -1081,6 +1081,17 @@
     if (Math.abs(dx) > 50) stepLightbox(dx < 0 ? 1 : -1);
   });
 
+  // 天氣格連點兩下，才會顯示／隱藏降雨機率（自己判斷連點，iOS 的 dblclick 不一定會觸發）
+  document.addEventListener('click', (e) => {
+    const box = e.target.closest('.wx');
+    if (!box) return;
+    const now = Date.now();
+    const twice = now - wxLastTap < 400;
+    wxLastTap = twice ? 0 : now;
+    if (!twice) return;
+    wxShowPop = !wxShowPop;
+    document.querySelectorAll('.wx').forEach((el) => el.classList.toggle('show-pop', wxShowPop));
+  });
   let pendingStay = 0;
   document.addEventListener('click', (e) => {
     const go = e.target.closest('[data-stay-go]');

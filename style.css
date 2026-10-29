@@ -695,3 +695,8 @@ body::after {
 .card.stay { scroll-margin-top: 70px; }
 .card.stay.flash { animation: stayFlash 1.6s ease-out; }
 @keyframes stayFlash { 0% { box-shadow: 0 0 0 3px var(--maple-2); } 100% { box-shadow: var(--shadow); } }
+
+/* 降雨機率預設隱藏，連點兩下天氣格才顯示 */
+.wx { -webkit-user-select: none; user-select: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.wx .wx-p { display: none; }
+.wx.show-pop .wx-p { display: inline; }
