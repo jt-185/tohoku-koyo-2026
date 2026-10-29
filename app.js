@@ -621,7 +621,7 @@
       }
       const kv = [
         ['房間', h['房間']], ['入住', h['入住']], ['退房', h['退房']], ['餐食', h['餐食']], ['餐食時間', h['餐食時間']],
-        ['溫泉', h['溫泉']], ['停車', h['停車']]
+        ['溫泉', h['溫泉']], ['停車', h['停車']], ['地址', h['地址']]
       ].filter(([, v]) => v).map(([k, v]) => '<dt>' + k + '</dt><dd>' + txt(v) + '</dd>').join('') +
         (/^https?:\/\//.test(h['官網']) ? '<dt>官網</dt><dd><a class="site-link" href="' + esc(h['官網']) + '" target="_blank" rel="noopener">' + esc(h['官網'].replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '')) + ' ↗</a></dd>' : '');
       const q = h['地址'] || h['日文名'] || h['名稱'];
@@ -632,7 +632,6 @@
         '<h3>' + esc(h['名稱']) + '</h3>' + (h['日文名'] && h['日文名'] !== h['名稱'] ? '<div class="jp">' + esc(h['日文名']) + '</div>' : '') + '</div>' +
         statusBadge(h['狀態']) + '</div>' +
         (kv ? '<dl class="kv">' + kv + '</dl>' : '') +
-        (h['地址'] ? '<details class="addr"><summary>地址</summary><div>' + txt(h['地址']) + '</div></details>' : '') +
         (h['備註'] ? '<p class="note">' + txt(h['備註']) + '</p>' : '') +
         '<div class="btn-row"><a class="btn" href="' + esc(mapUrl(q)) + '" target="_blank" rel="noopener">' + ICON.map + 'Google 地圖</a>' + tel + '</div>' +
         '</article>';
