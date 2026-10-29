@@ -663,11 +663,13 @@ body::after {
 .wx:empty { display: none; }
 .wx { margin-top: 12px; }
 .wx-row { display: flex; flex-wrap: wrap; gap: 6px; }
-.wx-i { flex: 1 1 96px; min-width: 0; padding: 7px 9px; border-radius: 10px; background: var(--paper-2, rgba(0,0,0,.035)); }
-.wx-n { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; color: var(--ink-2); }
-.wx-t { display: flex; align-items: baseline; gap: 2px; margin-top: 1px; font-size: 13px; color: var(--ink-3); }
-.wx-t .wx-ic { margin-right: 3px; font-size: 15px; }
-.wx-t b { font-size: 16px; color: var(--ink); font-weight: 700; }
-.wx-p { margin-top: 1px; font-size: 11.5px; color: var(--sky); }
+.wx-i { flex: 1 1 88px; min-width: 0; padding: 5px 7px; border-radius: 9px; background: var(--paper-2); }
+.wx-h { display: flex; align-items: baseline; justify-content: space-between; gap: 3px; }
+.wx-n { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 11px; color: var(--ink-2); }
+.wx-p { flex: none; font-size: 10.5px; color: var(--sky); }
+.wx-t { display: flex; align-items: baseline; gap: 1px; font-size: 12px; }
+.wx-t .wx-ic { margin-right: 3px; font-size: 13px; }
+.wx-t b { font-size: 15px; color: var(--ink); font-weight: 700; }
+.wx-lo { color: #5b9bc4; font-weight: 600; }
 .wx-src { margin: 4px 2px 0; font-size: 10.5px; color: var(--ink-3); text-align: right; }
 .site-link { color: var(--sky); text-decoration: none; word-break: break-all; }

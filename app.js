@@ -334,11 +334,13 @@
     const start = settings()['出發日'];
     return start ? new Date(Date.parse(start + 'T00:00:00Z') + (n - 1) * 86400000).toISOString().slice(0, 10) : '';
   }
-  // 當天去的地方（不含前一晚的住宿），距離太近的只留一個
+  // 當天的出發地（前一晚住宿）和去的地方；距離太近的只留一個，出發地旁邊就是景點時改用景點名
   function wxPlaces(n) {
     const out = [];
-    dayPoints(n).pts.filter((p) => !p.start).forEach((p) => {
-      if (!out.some((q) => Math.abs(q.ll[0] - p.ll[0]) + Math.abs(q.ll[1] - p.ll[1]) < 0.12)) out.push(p);
+    dayPoints(n).pts.forEach((p) => {
+      const i = out.findIndex((q) => Math.abs(q.ll[0] - p.ll[0]) + Math.abs(q.ll[1] - p.ll[1]) < 0.12);
+      if (i < 0) out.push(p);
+      else if (out[i].start && !p.stay) out[i] = p;
     });
     return out.slice(0, 4);
   }
@@ -349,9 +351,8 @@
     const items = wxPlaces(n).map((p) => {
       const d = wx[wxKey(p.ll)] && wx[wxKey(p.ll)][iso];
       if (!d) return '';
-      return '<div class="wx-i"><div class="wx-n">' + esc(p.label) + '</div>' +
-        '<div class="wx-t"><span class="wx-ic">' + wxIcon(d.c, d.p) + '</span><b>' + d.hi + '°</b><span>/' + d.lo + '°</span></div>' +
-        (d.p != null ? '<div class="wx-p">☂ 降雨 ' + d.p + '%</div>' : '') + '</div>';
+      return '<div class="wx-i"><div class="wx-h"><span class="wx-n">' + esc(p.label.length > 4 ? p.label.replace(/溫泉$/, '') : p.label) + '</span>' + (d.p != null ? '<span class="wx-p">☂' + d.p + '%</span>' : '') + '</div>' +
+        '<div class="wx-t"><span class="wx-ic">' + wxIcon(d.c, d.p) + '</span><b>' + d.hi + '°</b><span class="wx-lo">/' + d.lo + '°</span></div></div>';
     }).join('');
     return items ? '<div class="wx-row">' + items + '</div><p class="wx-src">天氣預報・Open-Meteo</p>' : '';
   }
