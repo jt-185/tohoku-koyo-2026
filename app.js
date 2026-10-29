@@ -275,6 +275,7 @@
         '<div class="day-corner"><b class="seg-day">DAY ' + esc(day['Day']) + '</b><span class="seg-date">' + esc(day['日期']) + '</span><span class="seg-nights">週' + esc(day['星期']) + '</span></div>' +
         '<h2>' + esc(day['標題']) + '</h2>' +
         '<p class="route">' + ICON.map + '<span>' + esc(day['路線']) + '</span></p>' +
+        '<div class="wx" data-wx-day="' + currentDay + '">' + wxInner(currentDay) + '</div>' +
         (facts ? '<div class="day-facts">' + facts + '</div>' : '') +
         mapHtml +
         (list ? '<ol class="timeline">' + list + '</ol>' : '') +
@@ -314,6 +315,80 @@
       pts.push(pt);
     });
     return { n: n, pts: pts, alts: alts };
+  }
+  // 天氣：Open-Meteo 每日預報（最多 16 天），整趟一次抓，一小時內不重抓
+  let wx = null, wxAt = 0, wxBusy = false;
+  const WX_DAYS = 16;
+  // 天氣代碼取的是一天中最差的時段，降雨機率低時改顯示雲，避免小雨圖示配 6% 降雨
+  function wxIcon(c, p) {
+    if (c >= 51 && c <= 82 && !(c >= 71 && c <= 77) && p != null && p < 30) return '☁️';
+    if (c === 0) return '☀️';
+    if (c <= 2) return '🌤️';
+    if (c === 3) return '☁️';
+    if (c <= 48) return '🌫️';
+    if (c <= 67 || (c >= 80 && c <= 82)) return '🌧️';
+    if (c <= 86) return '❄️';
+    return '⛈️';
+  }
+  function dayIso(n) {
+    const start = settings()['出發日'];
+    return start ? new Date(Date.parse(start + 'T00:00:00Z') + (n - 1) * 86400000).toISOString().slice(0, 10) : '';
+  }
+  // 當天去的地方（不含前一晚的住宿），距離太近的只留一個
+  function wxPlaces(n) {
+    const out = [];
+    dayPoints(n).pts.filter((p) => !p.start).forEach((p) => {
+      if (!out.some((q) => Math.abs(q.ll[0] - p.ll[0]) + Math.abs(q.ll[1] - p.ll[1]) < 0.12)) out.push(p);
+    });
+    return out.slice(0, 4);
+  }
+  const wxKey = (ll) => ll[0].toFixed(2) + ',' + ll[1].toFixed(2);
+  function wxInner(n) {
+    if (!wx) return '';
+    const iso = dayIso(n);
+    const items = wxPlaces(n).map((p) => {
+      const d = wx[wxKey(p.ll)] && wx[wxKey(p.ll)][iso];
+      if (!d) return '';
+      return '<div class="wx-i"><div class="wx-n">' + esc(p.label) + '</div>' +
+        '<div class="wx-t"><span class="wx-ic">' + wxIcon(d.c, d.p) + '</span><b>' + d.hi + '°</b><span>/' + d.lo + '°</span></div>' +
+        (d.p != null ? '<div class="wx-p">☂ 降雨 ' + d.p + '%</div>' : '') + '</div>';
+    }).join('');
+    return items ? '<div class="wx-row">' + items + '</div><p class="wx-src">天氣預報・Open-Meteo</p>' : '';
+  }
+  function loadWx() {
+    if (wxBusy || Date.now() - wxAt < 3600000) return;
+    const s = settings();
+    const days = rows('每日').map((d) => Number(d['Day']));
+    if (!s['出發日'] || !days.length) return;
+    const today = tokyoToday();
+    const last = new Date(Date.parse(today + 'T00:00:00Z') + (WX_DAYS - 1) * 86400000).toISOString().slice(0, 10);
+    const from = dayIso(days[0]) > today ? dayIso(days[0]) : today;
+    const to = dayIso(days[days.length - 1]) < last ? dayIso(days[days.length - 1]) : last;
+    if (from > to) return;
+    const pts = {};
+    days.forEach((n) => wxPlaces(n).forEach((p) => { pts[wxKey(p.ll)] = p.ll; }));
+    const keys = Object.keys(pts);
+    if (!keys.length) return;
+    wxBusy = true;
+    const url = 'https://api.open-meteo.com/v1/forecast?timezone=Asia%2FTokyo' +
+      '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max' +
+      '&latitude=' + keys.map((k) => pts[k][0]).join(',') + '&longitude=' + keys.map((k) => pts[k][1]).join(',') +
+      '&start_date=' + from + '&end_date=' + to;
+    fetch(url).then((r) => r.json()).then((j) => {
+      const list = Array.isArray(j) ? j : [j];
+      const out = {};
+      list.forEach((loc, i) => {
+        if (!loc.daily) return;
+        const by = {};
+        loc.daily.time.forEach((t, k) => {
+          by[t] = { c: loc.daily.weather_code[k], hi: Math.round(loc.daily.temperature_2m_max[k]), lo: Math.round(loc.daily.temperature_2m_min[k]), p: loc.daily.precipitation_probability_max[k] };
+        });
+        out[keys[i]] = by;
+      });
+      wx = out; wxAt = Date.now();
+      const box = document.querySelector('[data-wx-day]');
+      if (box) box.innerHTML = wxInner(Number(box.dataset.wxDay));
+    }).catch(() => {}).finally(() => { wxBusy = false; });
   }
   function allDayPoints() {
     return rows('每日').map((d) => dayPoints(Number(d['Day'])));
@@ -523,7 +598,8 @@
       const kv = [
         ['房間', h['房間']], ['入住', h['入住']], ['退房', h['退房']], ['餐食', h['餐食']], ['餐食時間', h['餐食時間']],
         ['溫泉', h['溫泉']], ['停車', h['停車']], ['地址', h['地址']]
-      ].filter(([, v]) => v).map(([k, v]) => '<dt>' + k + '</dt><dd>' + txt(v) + '</dd>').join('');
+      ].filter(([, v]) => v).map(([k, v]) => '<dt>' + k + '</dt><dd>' + txt(v) + '</dd>').join('') +
+        (/^https?:\/\//.test(h['官網']) ? '<dt>官網</dt><dd><a class="site-link" href="' + esc(h['官網']) + '" target="_blank" rel="noopener">' + esc(h['官網'].replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '')) + ' ↗</a></dd>' : '');
       const q = h['地址'] || h['日文名'] || h['名稱'];
       const tel = h['電話'] ? '<a class="btn" href="tel:' + esc(h['電話'].replace(/[^\d+]/g, '')) + '">' + ICON.phone + esc(h['電話']) + '</a>' : '';
       return '<article class="card stay">' + '<div class="day-corner">' + (dayNo > 0 ? '<b class="seg-day">DAY ' + dayNo + '</b>' : '') + '<span class="seg-date">' + dateLabel + '</span><span class="seg-nights">' + nights + ' 晚</span></div>' + coverHtml(h['名稱'], parseImages(h['圖片'])) +
@@ -873,6 +949,7 @@
     galleries = [];
     $('#app').innerHTML = fn();
     hydrateMaps();
+    if (v === 'plan') loadWx();
   }
   function renderAll() {
     renderHeader();

@@ -658,3 +658,16 @@ body::after {
 /* 航廈提示、回程託運 2 件標色 */
 .flight-end .place mark.terminal { background: none; color: var(--maple); font-weight: 700; padding: 0; margin-left: 2px; }
 .flight-foot .bag-more { color: var(--maple); }
+
+/* 每日天氣列 */
+.wx:empty { display: none; }
+.wx { margin-top: 12px; }
+.wx-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.wx-i { flex: 1 1 96px; min-width: 0; padding: 7px 9px; border-radius: 10px; background: var(--paper-2, rgba(0,0,0,.035)); }
+.wx-n { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; color: var(--ink-2); }
+.wx-t { display: flex; align-items: baseline; gap: 2px; margin-top: 1px; font-size: 13px; color: var(--ink-3); }
+.wx-t .wx-ic { margin-right: 3px; font-size: 15px; }
+.wx-t b { font-size: 16px; color: var(--ink); font-weight: 700; }
+.wx-p { margin-top: 1px; font-size: 11.5px; color: var(--sky); }
+.wx-src { margin: 4px 2px 0; font-size: 10.5px; color: var(--ink-3); text-align: right; }
+.site-link { color: var(--sky); text-decoration: none; word-break: break-all; }
