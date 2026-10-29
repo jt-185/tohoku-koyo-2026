@@ -214,6 +214,19 @@
   }
 
   // ── views ──
+  // 住宿卡片的起始天（第幾天入住）；行程裡的飯店用它找到住宿頁對應的卡片
+  function stayStartDay(h) {
+    const start = settings()['出發日'];
+    if (!start || !/^\d+\/\d+$/.test(h['日期'])) return 0;
+    const [m, d] = h['日期'].split('/').map(Number);
+    return daysBetween(start, start.slice(0, 4) + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0')) + 1;
+  }
+  function stayIdForDay(n) {
+    const hit = rows('住宿').map((h) => ({ s: stayStartDay(h), n: Number(h['晚數']) || 1 }))
+      .find((x) => x.s > 0 && n >= x.s && n < x.s + x.n);
+    return hit ? hit.s : 0;
+  }
+  const stayGo = (n, html, cls) => '<a class="stay-go ' + (cls || '') + '" href="#stay" data-stay-go="' + n + '">' + html + '</a>';
   function viewPlan() {
     const days = rows('每日');
     const items = rows('行程');
@@ -232,7 +245,10 @@
       day['開車'] && ['car', day['開車']],
       day['住宿'] && ['bed', day['住宿']],
       day['重點'] && ['star', day['重點']]
-    ].filter(Boolean).map(([icon, t]) => '<div class="fact">' + ICON[icon] + '<span>' + txt(t) + '</span></div>').join('');
+    ].filter(Boolean).map(([icon, t]) => {
+      const sid = icon === 'bed' ? stayIdForDay(currentDay) : 0;
+      return '<div class="fact">' + ICON[icon] + '<span>' + (sid ? stayGo(sid, txt(t) + ' ›') : txt(t)) + '</span></div>';
+    }).join('');
 
     const spots = rows('景點');
     const list = items.filter((it) => Number(it['Day']) === currentDay).map((it) => {
@@ -248,7 +264,7 @@
         '<div class="tl-time">' + esc(it['時間']) + '</div>' +
         '<div class="tl-rail"><span class="tl-dot"></span></div>' +
         '<div class="tl-body"><div class="tl-main"><div class="tl-type">' + esc(type) + '</div>' +
-        '<div class="tl-title">' + esc(it['項目']) + '</div>' +
+        '<div class="tl-title">' + (type === '住宿' && stayIdForDay(Number(it['Day'])) ? stayGo(stayIdForDay(Number(it['Day'])), esc(it['項目']) + ' ›') : esc(it['項目'])) + '</div>' +
         (it['說明'] ? '<p class="tl-desc">' + txt(it['說明']) + '</p>' : '') + links + '</div>' + thumb + '</div></li>';
     }).join('');
 
@@ -361,7 +377,7 @@
       return '<div class="wx-i" style="background:linear-gradient(90deg,' + wxSky(i / places.length) + ',' + wxSky((i + 1) / places.length) + ')"><div class="wx-h"><span class="wx-n">' + esc(p.label.length > 4 ? p.label.replace(/溫泉$/, '') : p.label) + '</span>' + (d.p != null ? '<span class="wx-p">☂' + d.p + '%</span>' : '') + '</div>' +
         '<div class="wx-t"><span class="wx-ic">' + wxIcon(d.c, d.p) + '</span><b>' + d.hi + '°</b><span class="wx-lo">/' + d.lo + '°</span></div></div>';
     }).join('');
-    return items ? '<div class="wx-row">' + items + '</div><p class="wx-src">天氣預報・Open-Meteo</p>' : '';
+    return items ? '<div class="wx-row">' + items + '</div><p class="wx-src">天氣預報・Open-Meteo・隨時更新</p>' : '';
   }
   function loadWx() {
     if (wxBusy || Date.now() - wxAt < 3600000) return;
@@ -605,17 +621,18 @@
       }
       const kv = [
         ['房間', h['房間']], ['入住', h['入住']], ['退房', h['退房']], ['餐食', h['餐食']], ['餐食時間', h['餐食時間']],
-        ['溫泉', h['溫泉']], ['停車', h['停車']], ['地址', h['地址']]
+        ['溫泉', h['溫泉']], ['停車', h['停車']]
       ].filter(([, v]) => v).map(([k, v]) => '<dt>' + k + '</dt><dd>' + txt(v) + '</dd>').join('') +
         (/^https?:\/\//.test(h['官網']) ? '<dt>官網</dt><dd><a class="site-link" href="' + esc(h['官網']) + '" target="_blank" rel="noopener">' + esc(h['官網'].replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '')) + ' ↗</a></dd>' : '');
       const q = h['地址'] || h['日文名'] || h['名稱'];
       const tel = h['電話'] ? '<a class="btn" href="tel:' + esc(h['電話'].replace(/[^\d+]/g, '')) + '">' + ICON.phone + esc(h['電話']) + '</a>' : '';
-      return '<article class="card stay">' + '<div class="day-corner">' + (dayNo > 0 ? '<b class="seg-day">DAY ' + dayNo + '</b>' : '') + '<span class="seg-date">' + dateLabel + '</span><span class="seg-nights">' + nights + ' 晚</span></div>' + coverHtml(h['名稱'], parseImages(h['圖片'])) +
+      return '<article class="card stay"' + (dayNo > 0 ? ' id="stay-' + dayNo + '"' : '') + '>' + '<div class="day-corner">' + (dayNo > 0 ? '<b class="seg-day">DAY ' + dayNo + '</b>' : '') + '<span class="seg-date">' + dateLabel + '</span><span class="seg-nights">' + nights + ' 晚</span></div>' + coverHtml(h['名稱'], parseImages(h['圖片'])) +
         '<div class="stay-top"><div>' +
         placeTags(h['地區']) +
         '<h3>' + esc(h['名稱']) + '</h3>' + (h['日文名'] && h['日文名'] !== h['名稱'] ? '<div class="jp">' + esc(h['日文名']) + '</div>' : '') + '</div>' +
         statusBadge(h['狀態']) + '</div>' +
         (kv ? '<dl class="kv">' + kv + '</dl>' : '') +
+        (h['地址'] ? '<details class="addr"><summary>地址</summary><div>' + txt(h['地址']) + '</div></details>' : '') +
         (h['備註'] ? '<p class="note">' + txt(h['備註']) + '</p>' : '') +
         '<div class="btn-row"><a class="btn" href="' + esc(mapUrl(q)) + '" target="_blank" rel="noopener">' + ICON.map + 'Google 地圖</a>' + tel + '</div>' +
         '</article>';
@@ -1064,8 +1081,26 @@
     if (Math.abs(dx) > 50) stepLightbox(dx < 0 ? 1 : -1);
   });
 
+  let pendingStay = 0;
+  document.addEventListener('click', (e) => {
+    const go = e.target.closest('[data-stay-go]');
+    if (!go) return;
+    pendingStay = go.dataset.stayGo;
+    if (currentView() === 'stay') { e.preventDefault(); scrollToStay(); }
+  });
+  function scrollToStay() {
+    const el = pendingStay && document.getElementById('stay-' + pendingStay);
+    pendingStay = 0;
+    if (!el) return false;
+    const top = el.getBoundingClientRect().top + window.scrollY - (document.querySelector('.tabs') ? 12 : 0);
+    window.scrollTo({ top: top, behavior: 'instant' });
+    el.classList.add('flash');
+    setTimeout(() => el.classList.remove('flash'), 1600);
+    return true;
+  }
   window.addEventListener('hashchange', () => {
     renderView();
+    if (pendingStay && scrollToStay()) return;
     const heroH = document.querySelector('.hero').offsetHeight;
     if (window.scrollY > heroH) window.scrollTo({ top: heroH });
   });
