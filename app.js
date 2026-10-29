@@ -344,14 +344,21 @@
     });
     return out.slice(0, 4);
   }
+  // 天氣格底色：由左到右是白天的天空藍 → 午後金黃 → 傍晚粉紫
+  const WX_SKY = [[190, 224, 245], [250, 226, 180], [230, 194, 222]];
+  function wxSky(t) {
+    const seg = Math.min(t * (WX_SKY.length - 1), WX_SKY.length - 1.0001);
+    const a = WX_SKY[Math.floor(seg)], b = WX_SKY[Math.floor(seg) + 1], f = seg - Math.floor(seg);
+    return 'rgba(' + a.map((v, k) => Math.round(v + (b[k] - v) * f)).join(',') + ',.9)';
+  }
   const wxKey = (ll) => ll[0].toFixed(2) + ',' + ll[1].toFixed(2);
   function wxInner(n) {
     if (!wx) return '';
     const iso = dayIso(n);
-    const items = wxPlaces(n).map((p) => {
-      const d = wx[wxKey(p.ll)] && wx[wxKey(p.ll)][iso];
-      if (!d) return '';
-      return '<div class="wx-i"><div class="wx-h"><span class="wx-n">' + esc(p.label.length > 4 ? p.label.replace(/溫泉$/, '') : p.label) + '</span>' + (d.p != null ? '<span class="wx-p">☂' + d.p + '%</span>' : '') + '</div>' +
+    const places = wxPlaces(n).filter((p) => wx[wxKey(p.ll)] && wx[wxKey(p.ll)][iso]);
+    const items = places.map((p, i) => {
+      const d = wx[wxKey(p.ll)][iso];
+      return '<div class="wx-i" style="background:linear-gradient(90deg,' + wxSky(i / places.length) + ',' + wxSky((i + 1) / places.length) + ')"><div class="wx-h"><span class="wx-n">' + esc(p.label.length > 4 ? p.label.replace(/溫泉$/, '') : p.label) + '</span>' + (d.p != null ? '<span class="wx-p">☂' + d.p + '%</span>' : '') + '</div>' +
         '<div class="wx-t"><span class="wx-ic">' + wxIcon(d.c, d.p) + '</span><b>' + d.hi + '°</b><span class="wx-lo">/' + d.lo + '°</span></div></div>';
     }).join('');
     return items ? '<div class="wx-row">' + items + '</div><p class="wx-src">天氣預報・Open-Meteo</p>' : '';
