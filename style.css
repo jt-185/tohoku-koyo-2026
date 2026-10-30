@@ -712,8 +712,8 @@ body::after {
 .is-en .lang-btn { background: var(--sky); border-color: var(--sky); color: #fff; }
 .is-en .addr-t { font-family: -apple-system, "Helvetica Neue", sans-serif; }
 
-/* 飯店名稱裡的英文字母用 EB Garamond（不加粗，和明體搭）；中日文字維持明體 */
-.lat { font-family: "EB Garamond", var(--serif); font-weight: 500; font-size: 1.1em; letter-spacing: 0; }
+/* 飯店名稱裡的英文字母用 IBM Plex Sans（不加粗）；中日文字維持明體 */
+.lat { font-family: "IBM Plex Sans", var(--sans); font-weight: 400; font-size: .95em; letter-spacing: 0; }
 .stay h3:has(.lang-btn) .name-t { flex: none; width: max-content; white-space: nowrap; }
 /* 名稱不換行時，不能把卡片撐寬 */
 .stay { min-width: 0; }
