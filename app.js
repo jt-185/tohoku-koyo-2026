@@ -1155,7 +1155,7 @@
     if (open || !addrOf(card)) return;
     const pop = document.createElement('div');
     pop.className = 'addr-pop';
-    (card.querySelector('.stay-top') || card).appendChild(pop);
+    (card.querySelector('.stay-top > div') || card).appendChild(pop);
     fillAddrPop(pop, card);
   });
   let pendingStay = 0;

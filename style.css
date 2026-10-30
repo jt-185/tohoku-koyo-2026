@@ -445,7 +445,7 @@ main { max-width: 760px; margin: 0 auto; padding: 26px 16px 40px; }
 .seg-date { z-index: 2; background: linear-gradient(180deg, #fdeee6 0%, #f6dccf 100%); color: var(--maple); font-weight: 500; letter-spacing: .03em; }
 .seg-nights { z-index: 1; background: linear-gradient(180deg, #fcf3df 0%, #f3e0b8 100%); color: #8a5f17; font-weight: 500; }
 .day-corner > :first-child:not(.seg-day) { border-top-left-radius: var(--radius); padding-left: 16px; margin-left: 0; }
-.stay .stay-top .badge { position: absolute; top: 4px; right: 14px; padding: 0 9px; line-height: 20px; }
+.stay .stay-top .badge { position: absolute; top: 9px; right: 14px; }
 .stay:has(.day-corner):not(:has(.cover)) .stay-top { margin-top: 28px; }
 
 /* Google 地圖：把嵌入版左上角的起訖資訊卡裁掉 */
@@ -732,4 +732,4 @@ body::after {
 @keyframes popIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
 .stay h3 { -webkit-user-select: none; user-select: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 
-.stay-top { position: relative; }
+.stay-top > div:first-child { position: relative; }
