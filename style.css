@@ -701,8 +701,13 @@ body::after {
 .wx .wx-p { display: none; }
 .wx.show-pop .wx-p { display: inline; }
 
-/* 住宿地址：點兩下切換日文／英文 */
-.addr-swap { cursor: pointer; -webkit-user-select: none; user-select: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-.addr-swap .addr-t { display: block; }
-.addr-swap .addr-hint { display: block; margin-top: 1px; font-size: 10.5px; color: var(--ink-3); }
-.addr-swap.is-en .addr-t { font-family: -apple-system, "Helvetica Neue", sans-serif; }
+/* 住宿卡片：飯店名旁的「英／中」切換（名稱換行時按鈕固定在右邊，不會掉到下一行） */
+.stay h3:has(.lang-btn) { display: flex; align-items: flex-start; gap: 7px; font-size: 20px; word-break: keep-all; }
+.lang-btn {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; margin-top: 4px; padding: 0; border: 1px solid var(--line); border-radius: 7px;
+  background: var(--paper); color: var(--sky); font: 600 12.5px/1 var(--sans); cursor: pointer;
+}
+.lang-btn:active { opacity: .6; }
+.is-en .lang-btn { background: var(--sky); border-color: var(--sky); color: #fff; }
+.is-en .name-t, .is-en .addr-t { font-family: -apple-system, "Helvetica Neue", sans-serif; }

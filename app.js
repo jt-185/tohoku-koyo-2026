@@ -623,7 +623,7 @@
         ['房間', h['房間']], ['入住', h['入住']], ['退房', h['退房']], ['餐食', h['餐食']], ['餐食時間', h['餐食時間']],
         ['溫泉', h['溫泉']], ['停車', h['停車']], ['地址', h['地址']]
       ].filter(([, v]) => v).map(([k, v]) => '<dt>' + k + '</dt>' + (k === '地址' && h['英文地址']
-        ? '<dd class="addr-swap" data-jp="' + esc(v) + '" data-en="' + esc(h['英文地址']) + '"><span class="addr-t">' + esc(v) + '</span><span class="addr-hint">點兩下切換英文</span></dd>'
+        ? '<dd class="addr-swap" data-jp="' + esc(v) + '" data-en="' + esc(h['英文地址']) + '"><span class="addr-t">' + esc(v) + '</span></dd>'
         : '<dd>' + txt(v) + '</dd>')).join('') +
         (/^https?:\/\//.test(h['官網']) ? '<dt>官網</dt><dd><a class="site-link" href="' + esc(h['官網']) + '" target="_blank" rel="noopener">' + esc(h['官網'].replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '')) + ' ↗</a></dd>' : '');
       // 只給地址時 Google 地圖可能停在同址的別的地點（例如仙台東大都會會跑到仙台站），所以加上飯店名
@@ -632,7 +632,9 @@
       return '<article class="card stay"' + (dayNo > 0 ? ' id="stay-' + dayNo + '"' : '') + '>' + '<div class="day-corner">' + (dayNo > 0 ? '<b class="seg-day">DAY ' + dayNo + '</b>' : '') + '<span class="seg-date">' + dateLabel + '</span><span class="seg-nights">' + nights + ' 晚</span></div>' + coverHtml(h['名稱'], parseImages(h['圖片'])) +
         '<div class="stay-top"><div>' +
         placeTags(h['地區']) +
-        '<h3>' + esc(h['名稱']) + '</h3>' + (h['日文名'] && h['日文名'] !== h['名稱'] ? '<div class="jp">' + esc(h['日文名']) + '</div>' : '') + '</div>' +
+        '<h3>' + (h['英文名'] || h['英文地址']
+          ? '<span class="name-t" data-zh="' + esc(h['名稱']) + '" data-en="' + esc(h['英文名'] || h['名稱']) + '">' + esc(h['名稱']) + '</span><button type="button" class="lang-btn" data-lang-toggle aria-label="切換英文">英</button>'
+          : esc(h['名稱'])) + '</h3>' + (h['日文名'] && h['日文名'] !== h['名稱'] ? '<div class="jp">' + esc(h['日文名']) + '</div>' : '') + '</div>' +
         statusBadge(h['狀態']) + '</div>' +
         (kv ? '<dl class="kv">' + kv + '</dl>' : '') +
         (h['備註'] ? '<p class="note">' + txt(h['備註']) + '</p>' : '') +
@@ -1094,20 +1096,19 @@
     wxShowPop = !wxShowPop;
     document.querySelectorAll('.wx').forEach((el) => el.classList.toggle('show-pop', wxShowPop));
   });
-  // 住宿地址連點兩下，在日文和英文之間切換
-  let addrLastTap = 0, addrLastEl = null;
+  // 住宿卡片：飯店名旁的「英／中」按鈕，切換飯店名與地址的語言
   document.addEventListener('click', (e) => {
-    const dd = e.target.closest('.addr-swap');
-    if (!dd) return;
-    const now = Date.now();
-    const twice = dd === addrLastEl && now - addrLastTap < 400;
-    addrLastTap = twice ? 0 : now;
-    addrLastEl = dd;
-    if (!twice) return;
-    const en = !dd.classList.contains('is-en');
-    dd.classList.toggle('is-en', en);
-    dd.querySelector('.addr-t').textContent = en ? dd.dataset.en : dd.dataset.jp;
-    dd.querySelector('.addr-hint').textContent = en ? '點兩下切換日文' : '點兩下切換英文';
+    const btn = e.target.closest('[data-lang-toggle]');
+    if (!btn) return;
+    const card = btn.closest('.card');
+    const en = !card.classList.contains('is-en');
+    card.classList.toggle('is-en', en);
+    btn.textContent = en ? '中' : '英';
+    btn.setAttribute('aria-label', en ? '切換中文' : '切換英文');
+    const name = card.querySelector('.name-t');
+    if (name) name.textContent = en ? name.dataset.en : name.dataset.zh;
+    const addr = card.querySelector('.addr-swap');
+    if (addr) addr.querySelector('.addr-t').textContent = en ? addr.dataset.en : addr.dataset.jp;
   });
   let pendingStay = 0;
   document.addEventListener('click', (e) => {
