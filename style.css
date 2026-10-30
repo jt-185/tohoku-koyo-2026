@@ -702,7 +702,7 @@ body::after {
 .wx.show-pop .wx-p { display: inline; }
 
 /* 住宿卡片：飯店名旁的「英／中」切換（名稱換行時按鈕固定在右邊，不會掉到下一行） */
-.stay h3:has(.lang-btn) { display: flex; align-items: flex-start; gap: 7px; font-size: 20px; word-break: keep-all; }
+.stay h3:has(.lang-btn) { display: flex; align-items: flex-start; gap: 7px; font-size: 20px; }
 .lang-btn {
   flex: none; display: inline-flex; align-items: center; justify-content: center;
   width: 24px; height: 24px; margin-top: 4px; padding: 0; border: 1px solid var(--line); border-radius: 7px;
@@ -712,6 +712,10 @@ body::after {
 .is-en .lang-btn { background: var(--sky); border-color: var(--sky); color: #fff; }
 .is-en .addr-t { font-family: -apple-system, "Helvetica Neue", sans-serif; }
 
-/* 飯店名稱裡的英文用 IBM Plex Sans；中日文字 Plex 沒有，會自動落回原本的字體 */
-.stay h3 { font-family: "IBM Plex Sans", var(--serif); }
-.stay-go { font-family: "IBM Plex Sans", var(--sans); }
+/* 飯店名稱裡的英文字母用 EB Garamond（不加粗，和明體搭）；中日文字維持明體 */
+.lat { font-family: "EB Garamond", var(--serif); font-weight: 500; font-size: 1.1em; letter-spacing: 0; }
+.stay h3:has(.lang-btn) .name-t { flex: none; width: max-content; white-space: nowrap; }
+/* 名稱不換行時，不能把卡片撐寬 */
+.stay { min-width: 0; }
+.stay-top > div:first-child { min-width: 0; flex: 1; }
+.stay h3:has(.lang-btn) { min-width: 0; }

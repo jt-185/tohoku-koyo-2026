@@ -226,6 +226,18 @@
       .find((x) => x.s > 0 && n >= x.s && n < x.s + x.n);
     return hit ? hit.s : 0;
   }
+  // 名稱裡的英文字母包成 .lat（換成 EB Garamond）；中日文字不動
+  const nameHtml = (t) => esc(t).replace(/[A-Za-z0-9](?:[A-Za-z0-9 .,&'’\-]*[A-Za-z0-9.])?/g, '<span class="lat">$&</span>');
+  // 住宿卡片的飯店名不換行：太長就縮小字級，直到放得進按鈕左邊
+  function fitStayNames() {
+    document.querySelectorAll('.stay h3 .name-t').forEach((n) => {
+      n.style.fontSize = '';
+      const h3 = n.parentElement, btn = h3.querySelector('.lang-btn');
+      const avail = h3.clientWidth - (btn ? btn.offsetWidth + 7 : 0);
+      if (n.offsetWidth > avail) n.style.fontSize = Math.max(13, 20 * avail / n.offsetWidth * 0.98).toFixed(1) + 'px';
+    });
+  }
+  window.addEventListener('resize', fitStayNames);
   const stayGo = (n, html, cls) => '<a class="stay-go ' + (cls || '') + '" href="#stay" data-stay-go="' + n + '">' + html + '</a>';
   function viewPlan() {
     const days = rows('每日');
@@ -247,7 +259,7 @@
       day['重點'] && ['star', day['重點']]
     ].filter(Boolean).map(([icon, t]) => {
       const sid = icon === 'bed' ? stayIdForDay(currentDay) : 0;
-      return '<div class="fact">' + ICON[icon] + '<span>' + (sid ? stayGo(sid, txt(t) + ' ›') : txt(t)) + '</span></div>';
+      return '<div class="fact">' + ICON[icon] + '<span>' + (sid ? stayGo(sid, nameHtml(t) + ' ›') : txt(t)) + '</span></div>';
     }).join('');
 
     const spots = rows('景點');
@@ -264,7 +276,7 @@
         '<div class="tl-time">' + esc(it['時間']) + '</div>' +
         '<div class="tl-rail"><span class="tl-dot"></span></div>' +
         '<div class="tl-body"><div class="tl-main"><div class="tl-type">' + esc(type) + '</div>' +
-        '<div class="tl-title">' + (type === '住宿' && stayIdForDay(Number(it['Day'])) ? stayGo(stayIdForDay(Number(it['Day'])), esc(it['項目']) + ' ›') : esc(it['項目'])) + '</div>' +
+        '<div class="tl-title">' + (type === '住宿' && stayIdForDay(Number(it['Day'])) ? stayGo(stayIdForDay(Number(it['Day'])), nameHtml(it['項目']) + ' ›') : esc(it['項目'])) + '</div>' +
         (it['說明'] ? '<p class="tl-desc">' + txt(it['說明']) + '</p>' : '') + links + '</div>' + thumb + '</div></li>';
     }).join('');
 
@@ -633,8 +645,8 @@
         '<div class="stay-top"><div>' +
         placeTags(h['地區']) +
         '<h3>' + (h['英文名'] || h['英文地址']
-          ? '<span class="name-t" data-zh="' + esc(h['名稱']) + '" data-en="' + esc(h['英文名'] || h['名稱']) + '">' + esc(h['名稱']) + '</span><button type="button" class="lang-btn" data-lang-toggle aria-label="切換英文">英</button>'
-          : esc(h['名稱'])) + '</h3>' + (h['日文名'] && h['日文名'] !== h['名稱'] ? '<div class="jp">' + esc(h['日文名']) + '</div>' : '') + '</div>' +
+          ? '<span class="name-t" data-zh="' + esc(h['名稱']) + '" data-en="' + esc(h['英文名'] || h['名稱']) + '">' + nameHtml(h['名稱']) + '</span><button type="button" class="lang-btn" data-lang-toggle aria-label="切換英文">英</button>'
+          : nameHtml(h['名稱'])) + '</h3>' + (h['日文名'] && h['日文名'] !== h['名稱'] ? '<div class="jp">' + esc(h['日文名']) + '</div>' : '') + '</div>' +
         statusBadge(h['狀態']) + '</div>' +
         (kv ? '<dl class="kv">' + kv + '</dl>' : '') +
         (h['備註'] ? '<p class="note">' + txt(h['備註']) + '</p>' : '') +
@@ -979,6 +991,7 @@
     $('#app').innerHTML = fn();
     hydrateMaps();
     if (v === 'plan') loadWx();
+    if (v === 'stay') { fitStayNames(); document.fonts && document.fonts.ready.then(fitStayNames); }
   }
   function renderAll() {
     renderHeader();
@@ -1106,7 +1119,7 @@
     btn.textContent = en ? '中' : '英';
     btn.setAttribute('aria-label', en ? '切換中文' : '切換英文');
     const name = card.querySelector('.name-t');
-    if (name) name.textContent = en ? name.dataset.en : name.dataset.zh;
+    if (name) { name.innerHTML = nameHtml(en ? name.dataset.en : name.dataset.zh); fitStayNames(); }
     const addr = card.querySelector('.addr-swap');
     if (addr) addr.querySelector('.addr-t').textContent = en ? addr.dataset.en : addr.dataset.jp;
   });
