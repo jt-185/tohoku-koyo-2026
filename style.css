@@ -710,4 +710,8 @@ body::after {
 }
 .lang-btn:active { opacity: .6; }
 .is-en .lang-btn { background: var(--sky); border-color: var(--sky); color: #fff; }
-.is-en .name-t, .is-en .addr-t { font-family: -apple-system, "Helvetica Neue", sans-serif; }
+.is-en .addr-t { font-family: -apple-system, "Helvetica Neue", sans-serif; }
+
+/* 飯店名稱裡的英文用 IBM Plex Sans；中日文字 Plex 沒有，會自動落回原本的字體 */
+.stay h3 { font-family: "IBM Plex Sans", var(--serif); }
+.stay-go { font-family: "IBM Plex Sans", var(--sans); }
