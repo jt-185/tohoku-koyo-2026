@@ -237,7 +237,18 @@
       if (n.offsetWidth > avail) n.style.fontSize = Math.max(13, 20 * avail / n.offsetWidth * 0.98).toFixed(1) + 'px';
     });
   }
-  window.addEventListener('resize', fitStayNames);
+  // 地址也不換行：整列放寬、字級縮小到放得下；縮到 10.5px 還放不下（例如丸峰的英文地址）才允許換行
+  function fitAddrs() {
+    document.querySelectorAll('.addr-swap .addr-t').forEach((t) => {
+      t.style.fontSize = ''; t.style.whiteSpace = '';
+      const avail = t.parentElement.clientWidth;
+      if (t.scrollWidth <= avail + 0.5) return;
+      const size = 14 * avail / t.scrollWidth * 0.99;
+      if (size >= 10.5) t.style.fontSize = size.toFixed(1) + 'px';
+      else { t.style.fontSize = '12.5px'; t.style.whiteSpace = 'normal'; }
+    });
+  }
+  window.addEventListener('resize', () => { fitStayNames(); fitAddrs(); });
   const stayGo = (n, html, cls) => '<a class="stay-go ' + (cls || '') + '" href="#stay" data-stay-go="' + n + '">' + html + '</a>';
   function viewPlan() {
     const days = rows('每日');
@@ -634,7 +645,7 @@
       const kv = [
         ['房間', h['房間']], ['入住', h['入住']], ['退房', h['退房']], ['餐食', h['餐食']], ['餐食時間', h['餐食時間']],
         ['溫泉', h['溫泉']], ['停車', h['停車']], ['地址', h['地址']]
-      ].filter(([, v]) => v).map(([k, v]) => '<dt>' + k + '</dt>' + (k === '地址' && h['英文地址']
+      ].filter(([, v]) => v).map(([k, v]) => '<dt' + (k === '地址' && h['英文地址'] ? ' class="addr-k"' : '') + '>' + k + '</dt>' + (k === '地址' && h['英文地址']
         ? '<dd class="addr-swap" data-jp="' + esc(v) + '" data-en="' + esc(h['英文地址']) + '"><span class="addr-t">' + esc(v) + '</span></dd>'
         : '<dd>' + txt(v) + '</dd>')).join('') +
         (/^https?:\/\//.test(h['官網']) ? '<dt>官網</dt><dd><a class="site-link" href="' + esc(h['官網']) + '" target="_blank" rel="noopener">' + esc(h['官網'].replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '')) + ' ↗</a></dd>' : '');
@@ -991,7 +1002,7 @@
     $('#app').innerHTML = fn();
     hydrateMaps();
     if (v === 'plan') loadWx();
-    if (v === 'stay') { fitStayNames(); document.fonts && document.fonts.ready.then(fitStayNames); }
+    if (v === 'stay') { fitStayNames(); fitAddrs(); document.fonts && document.fonts.ready.then(() => { fitStayNames(); fitAddrs(); }); }
   }
   function renderAll() {
     renderHeader();
@@ -1119,9 +1130,10 @@
     btn.textContent = en ? '中' : '英';
     btn.setAttribute('aria-label', en ? '切換中文' : '切換英文');
     const name = card.querySelector('.name-t');
-    if (name) { name.innerHTML = nameHtml(en ? name.dataset.en : name.dataset.zh); fitStayNames(); }
+    if (name) name.innerHTML = nameHtml(en ? name.dataset.en : name.dataset.zh);
     const addr = card.querySelector('.addr-swap');
     if (addr) addr.querySelector('.addr-t').textContent = en ? addr.dataset.en : addr.dataset.jp;
+    fitStayNames(); fitAddrs();
   });
   let pendingStay = 0;
   document.addEventListener('click', (e) => {

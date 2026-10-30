@@ -190,7 +190,7 @@ main { max-width: 760px; margin: 0 auto; padding: 26px 16px 40px; }
 .stay h3 { font-size: 21px; margin-top: 3px; }
 .stay .jp { font-size: 13px; color: var(--ink-3); }
 .stay-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-.kv { display: grid; grid-template-columns: 64px 1fr; gap: 6px 12px; margin: 14px 0 0; font-size: 14px; }
+.kv { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 6px 12px; margin: 14px 0 0; font-size: 14px; }
 .kv dt { color: var(--ink-3); }
 .kv dd { margin: 0; }
 .addr { margin: 10px 0 0; font-size: 12.5px; color: var(--ink-3); }
@@ -719,3 +719,9 @@ body::after {
 .stay { min-width: 0; }
 .stay-top > div:first-child { min-width: 0; flex: 1; }
 .stay h3:has(.lang-btn) { min-width: 0; }
+
+/* 地址：整列放寬（標籤在上、地址在下），讓一行放得下 */
+.kv dt.addr-k { grid-column: 1 / -1; margin-bottom: -4px; }
+.kv dd.addr-swap { grid-column: 1 / -1; }
+.addr-swap .addr-t { display: block; white-space: nowrap; }
+.kv dd { min-width: 0; }
