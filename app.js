@@ -626,7 +626,8 @@
         ? '<dd class="addr-swap" data-jp="' + esc(v) + '" data-en="' + esc(h['英文地址']) + '"><span class="addr-t">' + esc(v) + '</span><span class="addr-hint">點兩下切換英文</span></dd>'
         : '<dd>' + txt(v) + '</dd>')).join('') +
         (/^https?:\/\//.test(h['官網']) ? '<dt>官網</dt><dd><a class="site-link" href="' + esc(h['官網']) + '" target="_blank" rel="noopener">' + esc(h['官網'].replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '')) + ' ↗</a></dd>' : '');
-      const q = h['地址'] || h['日文名'] || h['名稱'];
+      // 只給地址時 Google 地圖可能停在同址的別的地點（例如仙台東大都會會跑到仙台站），所以加上飯店名
+      const q = [(h['日文名'] || h['名稱']).replace(/[（(][^）)]*[）)]/g, '').trim(), h['地址'].replace(/^〒\s*\d{3}-\d{4}\s*/, '')].filter(Boolean).join(' ');
       const tel = h['電話'] ? '<a class="btn" href="tel:' + esc(h['電話'].replace(/[^\d+]/g, '')) + '">' + ICON.phone + esc(h['電話']) + '</a>' : '';
       return '<article class="card stay"' + (dayNo > 0 ? ' id="stay-' + dayNo + '"' : '') + '>' + '<div class="day-corner">' + (dayNo > 0 ? '<b class="seg-day">DAY ' + dayNo + '</b>' : '') + '<span class="seg-date">' + dateLabel + '</span><span class="seg-nights">' + nights + ' 晚</span></div>' + coverHtml(h['名稱'], parseImages(h['圖片'])) +
         '<div class="stay-top"><div>' +
