@@ -710,18 +710,26 @@ body::after {
 }
 .lang-btn:active { opacity: .6; }
 .is-en .lang-btn { background: var(--sky); border-color: var(--sky); color: #fff; }
-.is-en .addr-t { font-family: -apple-system, "Helvetica Neue", sans-serif; }
 
-/* 飯店名稱裡的英文字母用 IBM Plex Sans（不加粗）；中日文字維持明體 */
-.lat { font-family: "IBM Plex Sans", var(--sans); font-weight: 400; font-size: .95em; letter-spacing: 0; }
+/* 飯店名稱裡的英文字母用 EB Garamond（不加粗）；中日文字維持明體 */
+.lat { font-family: "EB Garamond", var(--serif); font-weight: 500; font-size: 1.1em; letter-spacing: 0; }
 .stay h3:has(.lang-btn) .name-t { flex: none; width: max-content; white-space: nowrap; }
 /* 名稱不換行時，不能把卡片撐寬 */
 .stay { min-width: 0; }
 .stay-top > div:first-child { min-width: 0; flex: 1; }
 .stay h3:has(.lang-btn) { min-width: 0; }
 
-/* 地址：整列放寬（標籤在上、地址在下），讓一行放得下 */
-.kv dt.addr-k { grid-column: 1 / -1; margin-bottom: -4px; }
-.kv dd.addr-swap { grid-column: 1 / -1; }
-.addr-swap .addr-t { display: block; white-space: nowrap; }
-.kv dd { min-width: 0; }
+
+/* 連點兩下飯店名跳出的地址 */
+.addr-pop {
+  position: absolute; left: -10px; right: -10px; top: 100%; z-index: 6; margin-top: 4px;
+  padding: 10px 12px; border-radius: 12px; background: rgba(255, 253, 248, .96);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(60, 40, 20, .18);
+  font-size: 14px; line-height: 1.5; color: var(--ink); -webkit-user-select: text; user-select: text;
+  animation: popIn .16s ease-out;
+}
+@keyframes popIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+.stay h3 { -webkit-user-select: none; user-select: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+
+.stay-top { position: relative; }

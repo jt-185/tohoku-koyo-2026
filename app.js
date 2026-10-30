@@ -237,18 +237,7 @@
       if (n.offsetWidth > avail) n.style.fontSize = Math.max(13, 20 * avail / n.offsetWidth * 0.98).toFixed(1) + 'px';
     });
   }
-  // 地址也不換行：整列放寬、字級縮小到放得下；縮到 10.5px 還放不下（例如丸峰的英文地址）才允許換行
-  function fitAddrs() {
-    document.querySelectorAll('.addr-swap .addr-t').forEach((t) => {
-      t.style.fontSize = ''; t.style.whiteSpace = '';
-      const avail = t.parentElement.clientWidth;
-      if (t.scrollWidth <= avail + 0.5) return;
-      const size = 14 * avail / t.scrollWidth * 0.99;
-      if (size >= 10.5) t.style.fontSize = size.toFixed(1) + 'px';
-      else { t.style.fontSize = '12.5px'; t.style.whiteSpace = 'normal'; }
-    });
-  }
-  window.addEventListener('resize', () => { fitStayNames(); fitAddrs(); });
+  window.addEventListener('resize', fitStayNames);
   const stayGo = (n, html, cls) => '<a class="stay-go ' + (cls || '') + '" href="#stay" data-stay-go="' + n + '">' + html + '</a>';
   function viewPlan() {
     const days = rows('每日');
@@ -644,15 +633,13 @@
       }
       const kv = [
         ['房間', h['房間']], ['入住', h['入住']], ['退房', h['退房']], ['餐食', h['餐食']], ['餐食時間', h['餐食時間']],
-        ['溫泉', h['溫泉']], ['停車', h['停車']], ['地址', h['地址']]
-      ].filter(([, v]) => v).map(([k, v]) => '<dt' + (k === '地址' && h['英文地址'] ? ' class="addr-k"' : '') + '>' + k + '</dt>' + (k === '地址' && h['英文地址']
-        ? '<dd class="addr-swap" data-jp="' + esc(v) + '" data-en="' + esc(h['英文地址']) + '"><span class="addr-t">' + esc(v) + '</span></dd>'
-        : '<dd>' + txt(v) + '</dd>')).join('') +
+        ['溫泉', h['溫泉']], ['停車', h['停車']]
+      ].filter(([, v]) => v).map(([k, v]) => '<dt>' + k + '</dt><dd>' + txt(v) + '</dd>').join('') +
         (/^https?:\/\//.test(h['官網']) ? '<dt>官網</dt><dd><a class="site-link" href="' + esc(h['官網']) + '" target="_blank" rel="noopener">' + esc(h['官網'].replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '')) + ' ↗</a></dd>' : '');
       // 只給地址時 Google 地圖可能停在同址的別的地點（例如仙台東大都會會跑到仙台站），所以加上飯店名
       const q = [(h['日文名'] || h['名稱']).replace(/[（(][^）)]*[）)]/g, '').trim(), h['地址'].replace(/^〒\s*\d{3}-\d{4}\s*/, '')].filter(Boolean).join(' ');
       const tel = h['電話'] ? '<a class="btn" href="tel:' + esc(h['電話'].replace(/[^\d+]/g, '')) + '">' + ICON.phone + esc(h['電話']) + '</a>' : '';
-      return '<article class="card stay"' + (dayNo > 0 ? ' id="stay-' + dayNo + '"' : '') + '>' + '<div class="day-corner">' + (dayNo > 0 ? '<b class="seg-day">DAY ' + dayNo + '</b>' : '') + '<span class="seg-date">' + dateLabel + '</span><span class="seg-nights">' + nights + ' 晚</span></div>' + coverHtml(h['名稱'], parseImages(h['圖片'])) +
+      return '<article class="card stay"' + (dayNo > 0 ? ' id="stay-' + dayNo + '"' : '') + ' data-addr-jp="' + esc(h['地址']) + '" data-addr-en="' + esc(h['英文地址']) + '">' + '<div class="day-corner">' + (dayNo > 0 ? '<b class="seg-day">DAY ' + dayNo + '</b>' : '') + '<span class="seg-date">' + dateLabel + '</span><span class="seg-nights">' + nights + ' 晚</span></div>' + coverHtml(h['名稱'], parseImages(h['圖片'])) +
         '<div class="stay-top"><div>' +
         placeTags(h['地區']) +
         '<h3>' + (h['英文名'] || h['英文地址']
@@ -1002,7 +989,7 @@
     $('#app').innerHTML = fn();
     hydrateMaps();
     if (v === 'plan') loadWx();
-    if (v === 'stay') { fitStayNames(); fitAddrs(); document.fonts && document.fonts.ready.then(() => { fitStayNames(); fitAddrs(); }); }
+    if (v === 'stay') { fitStayNames(); document.fonts && document.fonts.ready.then(fitStayNames); }
   }
   function renderAll() {
     renderHeader();
@@ -1131,9 +1118,45 @@
     btn.setAttribute('aria-label', en ? '切換中文' : '切換英文');
     const name = card.querySelector('.name-t');
     if (name) name.innerHTML = nameHtml(en ? name.dataset.en : name.dataset.zh);
-    const addr = card.querySelector('.addr-swap');
-    if (addr) addr.querySelector('.addr-t').textContent = en ? addr.dataset.en : addr.dataset.jp;
-    fitStayNames(); fitAddrs();
+    fitStayNames();
+    const pop = card.querySelector('.addr-pop');
+    if (pop) fillAddrPop(pop, card);
+  });
+  // 地址盡量一行：字級自動縮小（最小 10.5px），再放不下才換行
+  function fillAddrPop(pop, card) {
+    pop.textContent = addrOf(card);
+    pop.style.fontSize = ''; pop.style.whiteSpace = 'nowrap';
+    const avail = pop.clientWidth - 24;
+    if (pop.scrollWidth - 24 <= avail + 0.5) return;
+    const size = 14 * avail / (pop.scrollWidth - 24) * 0.99;
+    if (size >= 10.5) pop.style.fontSize = size.toFixed(1) + 'px';
+    else { pop.style.fontSize = '13px'; pop.style.whiteSpace = 'normal'; }
+  }
+  // 連點兩下飯店名，跳出地址（跟著「英／中」切換語言）；再連點一下、或點別處就收起來
+  const addrOf = (card) => (card.classList.contains('is-en') && card.dataset.addrEn) || card.dataset.addrJp || card.dataset.addrEn || '';
+  const closeAddrPop = () => document.querySelectorAll('.addr-pop').forEach((p) => p.remove());
+  let nameLastTap = 0, nameLastCard = null;
+  document.addEventListener('click', (e) => {
+    const h3 = e.target.closest('.stay h3');
+    const inPop = e.target.closest('.addr-pop');
+    if (e.target.closest('.lang-btn')) return;
+    if (!h3) {
+      if (!inPop) closeAddrPop();
+      return;
+    }
+    const card = h3.closest('.stay');
+    const now = Date.now();
+    const twice = card === nameLastCard && now - nameLastTap < 400;
+    nameLastTap = twice ? 0 : now;
+    nameLastCard = card;
+    if (!twice) return;
+    const open = card.querySelector('.addr-pop');
+    closeAddrPop();
+    if (open || !addrOf(card)) return;
+    const pop = document.createElement('div');
+    pop.className = 'addr-pop';
+    (card.querySelector('.stay-top') || card).appendChild(pop);
+    fillAddrPop(pop, card);
   });
   let pendingStay = 0;
   document.addEventListener('click', (e) => {
