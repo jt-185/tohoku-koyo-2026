@@ -622,7 +622,9 @@
       const kv = [
         ['房間', h['房間']], ['入住', h['入住']], ['退房', h['退房']], ['餐食', h['餐食']], ['餐食時間', h['餐食時間']],
         ['溫泉', h['溫泉']], ['停車', h['停車']], ['地址', h['地址']]
-      ].filter(([, v]) => v).map(([k, v]) => '<dt>' + k + '</dt><dd>' + txt(v) + '</dd>').join('') +
+      ].filter(([, v]) => v).map(([k, v]) => '<dt>' + k + '</dt>' + (k === '地址' && h['英文地址']
+        ? '<dd class="addr-swap" data-jp="' + esc(v) + '" data-en="' + esc(h['英文地址']) + '"><span class="addr-t">' + esc(v) + '</span><span class="addr-hint">點兩下切換英文</span></dd>'
+        : '<dd>' + txt(v) + '</dd>')).join('') +
         (/^https?:\/\//.test(h['官網']) ? '<dt>官網</dt><dd><a class="site-link" href="' + esc(h['官網']) + '" target="_blank" rel="noopener">' + esc(h['官網'].replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '')) + ' ↗</a></dd>' : '');
       const q = h['地址'] || h['日文名'] || h['名稱'];
       const tel = h['電話'] ? '<a class="btn" href="tel:' + esc(h['電話'].replace(/[^\d+]/g, '')) + '">' + ICON.phone + esc(h['電話']) + '</a>' : '';
@@ -1090,6 +1092,21 @@
     if (!twice) return;
     wxShowPop = !wxShowPop;
     document.querySelectorAll('.wx').forEach((el) => el.classList.toggle('show-pop', wxShowPop));
+  });
+  // 住宿地址連點兩下，在日文和英文之間切換
+  let addrLastTap = 0, addrLastEl = null;
+  document.addEventListener('click', (e) => {
+    const dd = e.target.closest('.addr-swap');
+    if (!dd) return;
+    const now = Date.now();
+    const twice = dd === addrLastEl && now - addrLastTap < 400;
+    addrLastTap = twice ? 0 : now;
+    addrLastEl = dd;
+    if (!twice) return;
+    const en = !dd.classList.contains('is-en');
+    dd.classList.toggle('is-en', en);
+    dd.querySelector('.addr-t').textContent = en ? dd.dataset.en : dd.dataset.jp;
+    dd.querySelector('.addr-hint').textContent = en ? '點兩下切換日文' : '點兩下切換英文';
   });
   let pendingStay = 0;
   document.addEventListener('click', (e) => {

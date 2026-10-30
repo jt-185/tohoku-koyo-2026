@@ -700,3 +700,9 @@ body::after {
 .wx { -webkit-user-select: none; user-select: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .wx .wx-p { display: none; }
 .wx.show-pop .wx-p { display: inline; }
+
+/* 住宿地址：點兩下切換日文／英文 */
+.addr-swap { cursor: pointer; -webkit-user-select: none; user-select: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.addr-swap .addr-t { display: block; }
+.addr-swap .addr-hint { display: block; margin-top: 1px; font-size: 10.5px; color: var(--ink-3); }
+.addr-swap.is-en .addr-t { font-family: -apple-system, "Helvetica Neue", sans-serif; }
