@@ -757,3 +757,9 @@ body::after {
 .pn-en { flex: none; max-width: 58%; text-align: right; font-family: "EB Garamond", var(--serif); font-weight: 500; font-size: 17px; letter-spacing: .01em; color: #2f5f86; }
 
 .link-row.note-row small { color: var(--ink-2); font-size: 14px; line-height: 1.6; -webkit-user-select: text; user-select: text; }
+
+/* 景點：見頃標籤太長時換行，不要把卡片撐出畫面 */
+.stack > * { min-width: 0; }
+.spot-head { flex-wrap: wrap; row-gap: 6px; }
+.spot-head > div:first-child { min-width: 0; flex: 1 1 150px; }
+.spot-head .badge { white-space: normal; max-width: 100%; line-height: 1.45; padding-top: 2px; padding-bottom: 2px; }
