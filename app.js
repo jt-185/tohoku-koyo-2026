@@ -648,7 +648,7 @@
         statusBadge(h['狀態']) + '</div>' +
         (kv ? '<dl class="kv">' + kv + '</dl>' : '') +
         (h['備註'] ? '<p class="note">' + txt(h['備註']) + '</p>' : '') +
-        '<div class="btn-row"><a class="btn" href="' + esc(mapUrl(q)) + '" target="_blank" rel="noopener">' + ICON.map + 'Google 地圖</a>' + tel + '</div>' +
+        '<div class="btn-row"><a class="btn" href="' + esc(/^https:\/\/www\.google\.com\/maps\//.test(h['地圖連結']) ? h['地圖連結'] : mapUrl(q)) + '" target="_blank" rel="noopener">' + ICON.map + 'Google 地圖</a>' + tel + '</div>' +
         '</article>';
     }).join('');
     return '<div class="section-title"><h2>住宿</h2><p>共 ' + totalNights + ' 晚</p></div><div class="stack">' + cards + '</div>';
