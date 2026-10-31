@@ -743,7 +743,23 @@
       (shuttle ? '<div class="section-title spaced"><h2>機場接駁</h2><p>台灣段</p></div><article class="card">' + (shuttleBtns ? '<div class="tiles">' + shuttleBtns + '</div>' : '') + (shuttleKv ? '<dl class="kv">' + shuttleKv + '</dl>' : '') + '</article>' : '') +
       ((car || carBtns) ? '<div class="section-title spaced"><h2>租車</h2></div><article class="card">' + carCover + (carBtns ? '<div class="tiles">' + carBtns + '</div>' : '') + (car ? '<dl class="kv">' + car + '</dl>' : '') + '</article>' : '') +
       (drive ? '<div class="section-title spaced"><h2>開車時間</h2><p>Google 地圖</p></div><p class="hint">點一段路線，Google 地圖會從你目前的位置導航到目的地。</p>' +
-        '<article class="card"><ul class="drive-list">' + drive + '</ul></article>' : '');
+        '<article class="card"><ul class="drive-list">' + drive + '</ul></article>' : '') +
+      viewPlaceNames();
+  }
+
+  // 地名中英對照：看路牌、導航時用。分類各自可收合
+  function viewPlaceNames() {
+    const groups = {};
+    rows('地名').forEach((r) => { if (r['中文']) (groups[r['分類']] = groups[r['分類']] || []).push(r); });
+    const html = Object.keys(groups).map((g) => {
+      const items = groups[g].map((r) =>
+        '<li><span class="pn-zh">' + esc(r['中文']) +
+          (r['日文'] && r['日文'].replace(/\s/g, '') !== r['中文'].replace(/\s/g, '') ? '<small class="pn-jp">' + esc(r['日文']) + '</small>' : '') +
+          (r['備註'] ? '<small class="pn-note">' + esc(r['備註']) + '</small>' : '') + '</span>' +
+        '<b class="pn-en">' + esc(r['英文']) + '</b></li>').join('');
+      return '<details class="card pn-group"><summary><span>' + esc(g) + '</span><small>' + groups[g].length + '</small></summary><ul class="pn-list">' + items + '</ul></details>';
+    }).join('');
+    return html ? '<div class="section-title spaced"><h2>地名對照</h2><p>路牌・導航用</p></div><p class="hint">路牌通常是日文漢字＋英文拼音，點分類展開。</p><div class="stack pn-stack">' + html + '</div>' : '';
   }
 
   function viewSpots() {
