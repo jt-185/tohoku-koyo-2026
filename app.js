@@ -871,7 +871,7 @@
     const html = Object.keys(groups).map((g) => {
       const items = groups[g].map((r) => {
         const url = safeUrl(r['連結']);
-        if (!url) return '';
+        if (!url) return r['說明'] ? '<div class="link-row note-row"><span>' + esc(r['名稱']) + '<small>' + esc(r['說明']).replace(/\n/g, '<br>') + '</small></span></div>' : '';
         const isTel = url.startsWith('tel:');
         return '<a class="link-row' + (g === '緊急' ? ' emergency' : '') + '" href="' + esc(url) + '"' + (isTel ? '' : ' target="_blank" rel="noopener"') + '>' +
           '<span>' + esc(r['名稱']) + (r['說明'] ? '<small>' + esc(r['說明']) + '</small>' : '') + '</span>' +
