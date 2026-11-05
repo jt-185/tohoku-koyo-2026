@@ -894,7 +894,8 @@
           (r['位置'] ? '<span class="shop-where">' + esc(r['位置']) + '</span>' : '') +
           (r['怎麼走'] ? '<small>' + esc(r['怎麼走']) + '</small>' : '') +
           '<small class="shop-close">閉店 ' + esc(r['閉店']) + '</small></div>' +
-          (r['導航'] ? '<a class="nav-go" href="' + esc(walkUrl(r['導航'])) + '" target="_blank" rel="noopener">' + ICON.nav + '導航</a>' : '') +
+          (r['導航'] ? '<div class="shop-btns"><a class="nav-go" href="' + esc(mapUrl(r['導航'])) + '" target="_blank" rel="noopener">' + ICON.map + '地圖</a>' +
+            '<a class="nav-go" href="' + esc(walkUrl(r['導航'])) + '" target="_blank" rel="noopener">' + ICON.nav + '導航</a></div>' : '') +
         '</div>').join('');
       const coupon = groups[g].find((r) => r['優惠券圖片'] || r['優惠券']);
       return '<div class="link-group"><div class="shop-head"><h3>' + esc(g) + '</h3>' + (coupon ? '<div class="shop-coupons">' + couponBtns(coupon) + '</div>' : '') + '</div>' +

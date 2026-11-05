@@ -772,7 +772,8 @@ body::after {
 .shop-where { display: block; color: var(--ink-2); font-size: 14px; line-height: 1.5; }
 .shop-info small { display: block; color: var(--ink-3); font-size: 12.5px; line-height: 1.5; }
 .shop-info .shop-close { color: var(--maple); font-weight: 500; }
-.shop-row .nav-go { flex: none; padding: 6px 12px; font-size: 13px; text-decoration: none; }
+.shop-btns { display: flex; flex-direction: column; gap: 6px; flex: none; }
+.shop-row .nav-go { justify-content: center; padding: 6px 12px; font-size: 13px; text-decoration: none; }
 .shop-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-bottom: 8px; }
 .shop-head h3 { margin-bottom: 0; color: var(--ink); font-size: 17px; font-weight: 700; letter-spacing: .04em; }
 .shop-coupons { display: flex; gap: 6px; flex: none; }
