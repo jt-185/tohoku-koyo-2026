@@ -858,22 +858,30 @@
       ? '勾選後會存回試算表，大家都看得到。'
       : '目前還沒連上試算表，勾選只會存在這台裝置。';
 
-    return '<div class="section-title"><h2>出發準備</h2><p>每個人自己勾</p></div>' +
+    return viewShopping() +
+      '<div class="section-title spaced"><h2>出發準備</h2><p>每個人自己勾</p></div>' +
       '<p class="hint">我是：</p><div class="who" style="--n:' + people.length + '">' + whoChips + '</div>' +
       '<div class="progress">' + progress + '</div>' +
       '<p class="hint">' + hint + '</p>' +
       '<div class="stack">' + list + '</div>' +
-      viewShopping() +
       viewLinks();
   }
 
   // 逛街：飯店附近的店，導航用步行路線
   function viewShopping() {
+    // 圖片型優惠券存在網站裡（coupons/），可以先下載到手機，現場沒網路也能出示
+    const couponBtns = (r) => {
+      const img = /^coupons\/[\w.-]+$/.test(r['優惠券圖片']) ? r['優惠券圖片'] : '';
+      const url = img || safeUrl(r['優惠券']);
+      if (!url) return '';
+      return '<a class="coupon-btn" href="' + esc(url) + '" target="_blank" rel="noopener">優惠券</a>' +
+        (img ? '<a class="coupon-btn" href="' + esc(img) + '" download="' + esc(r['分類'] + '優惠券.jpg') + '">下載</a>' : '');
+    };
     const groups = {};
     rows('逛街').forEach((r) => { if (r['店名']) (groups[r['分類']] = groups[r['分類']] || []).push(r); });
     const html = Object.keys(groups).map((g) => {
       const items = groups[g].map((r) =>
-        '<div class="shop-row"><div class="shop-info"><b>' + esc(r['店名']) + '</b>' +
+        '<div class="shop-row"><div class="shop-info"><div class="shop-title"><b>' + esc(r['店名']) + '</b>' + couponBtns(r) + '</div>' +
           '<span class="shop-where">' + esc(r['位置']) + '</span>' +
           (r['怎麼走'] ? '<small>' + esc(r['怎麼走']) + '</small>' : '') +
           '<small class="shop-close">閉店 ' + esc(r['閉店']) + '</small></div>' +
@@ -881,7 +889,7 @@
         '</div>').join('');
       return '<div class="link-group"><h3>' + esc(g) + '</h3><div class="card links-card">' + items + '</div></div>';
     }).join('');
-    return html ? '<h3 class="sub-title">逛街</h3><p class="hint">從仙台東大都會大飯店（仙台站東口）走路出發，導航是步行路線。步行時間是估算，閉店時間以現場為準。</p>' + html : '';
+    return html ? '<div class="section-title"><h2>逛街</h2><p>飯店附近</p></div><p class="hint">從仙台東大都會大飯店（仙台站東口）走路出發，導航是步行路線。步行時間是估算，閉店時間以現場為準。</p>' + html : '';
   }
 
   function viewLinks() {

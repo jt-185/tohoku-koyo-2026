@@ -773,3 +773,5 @@ body::after {
 .shop-info small { display: block; color: var(--ink-3); font-size: 12.5px; line-height: 1.5; }
 .shop-info .shop-close { color: var(--maple); font-weight: 500; }
 .shop-row .nav-go { flex: none; padding: 6px 12px; font-size: 13px; text-decoration: none; }
+.shop-title { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.coupon-btn { flex: none; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--maple); color: var(--maple); font-size: 12px; font-weight: 500; line-height: 1.5; text-decoration: none; }
