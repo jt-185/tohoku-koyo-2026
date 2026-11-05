@@ -867,27 +867,38 @@
       viewLinks();
   }
 
+  const couponFiles = {};
+  function preloadCoupon(path) {
+    if (couponFiles[path]) return;
+    couponFiles[path] = 'loading';
+    fetch(path).then((r) => r.blob())
+      .then((b) => { couponFiles[path] = new File([b], path.split('/').pop(), { type: 'image/jpeg' }); })
+      .catch(() => { delete couponFiles[path]; });
+  }
+
   // 逛街：飯店附近的店，導航用步行路線
   function viewShopping() {
-    // 圖片型優惠券存在網站裡（coupons/），可以先下載到手機，現場沒網路也能出示
+    // 圖片型優惠券存在網站裡（coupons/），先載好，按下去才能馬上叫出 iPhone 的「儲存影像」
     const couponBtns = (r) => {
       const img = /^coupons\/[\w.-]+$/.test(r['優惠券圖片']) ? r['優惠券圖片'] : '';
       const url = img || safeUrl(r['優惠券']);
-      if (!url) return '';
-      return '<a class="coupon-btn" href="' + esc(url) + '" target="_blank" rel="noopener">優惠券</a>' +
-        (img ? '<a class="coupon-btn" href="' + esc(img) + '" download="' + esc(r['分類'] + '優惠券.jpg') + '">下載</a>' : '');
+      if (img) preloadCoupon(img);
+      return '<a class="coupon-btn" href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(r['優惠券按鈕文字'] || '優惠券') + '</a>' +
+        (img ? '<button class="coupon-btn" data-save-img="' + esc(img) + '">存到相簿</button>' : '');
     };
     const groups = {};
     rows('逛街').forEach((r) => { if (r['店名']) (groups[r['分類']] = groups[r['分類']] || []).push(r); });
     const html = Object.keys(groups).map((g) => {
       const items = groups[g].map((r) =>
-        '<div class="shop-row"><div class="shop-info"><div class="shop-title"><b>' + esc(r['店名']) + '</b>' + couponBtns(r) + '</div>' +
+        '<div class="shop-row"><div class="shop-info"><b>' + esc(r['店名']) + '</b>' +
           '<span class="shop-where">' + esc(r['位置']) + '</span>' +
           (r['怎麼走'] ? '<small>' + esc(r['怎麼走']) + '</small>' : '') +
           '<small class="shop-close">閉店 ' + esc(r['閉店']) + '</small></div>' +
           (r['導航'] ? '<a class="nav-go" href="' + esc(walkUrl(r['導航'])) + '" target="_blank" rel="noopener">' + ICON.nav + '導航</a>' : '') +
         '</div>').join('');
-      return '<div class="link-group"><h3>' + esc(g) + '</h3><div class="card links-card">' + items + '</div></div>';
+      const coupon = groups[g].find((r) => r['優惠券圖片'] || r['優惠券']);
+      return '<div class="link-group"><div class="shop-head"><h3>' + esc(g) + '</h3>' + (coupon ? '<div class="shop-coupons">' + couponBtns(coupon) + '</div>' : '') + '</div>' +
+        '<div class="card links-card">' + items + '</div></div>';
     }).join('');
     return html ? '<div class="section-title"><h2>逛街</h2><p>飯店附近</p></div><p class="hint">從仙台東大都會大飯店（仙台站東口）走路出發，導航是步行路線。步行時間是估算，閉店時間以現場為準。</p>' + html : '';
   }
@@ -1049,6 +1060,18 @@
   document.addEventListener('submit', (e) => {
     if (e.target.classList && e.target.classList.contains('sg-form')) { e.preventDefault(); sendSuggestion(); }
   });
+  // 優惠券存到相簿：iPhone 的分享選單有「儲存影像」；不支援時打開圖片，長按儲存
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-save-img]');
+    if (!btn) return;
+    const path = btn.dataset.saveImg, file = couponFiles[path];
+    if (file instanceof File && navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file] }).catch(() => {});
+    } else {
+      window.open(path, '_blank');
+    }
+  });
+
   document.addEventListener('click', (e) => {
     const sgName = e.target.closest('[data-sg-name]');
     if (sgName) { sgDraft.name = sgName.dataset.sgName; sgState.msg = ''; renderView(); return; }
