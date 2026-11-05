@@ -890,12 +890,12 @@
     rows('逛街').forEach((r) => { if (r['店名']) (groups[r['分類']] = groups[r['分類']] || []).push(r); });
     const html = Object.keys(groups).map((g) => {
       const items = groups[g].map((r) =>
-        '<div class="shop-row"><div class="shop-info"><b>' + esc(r['店名']) + '</b>' +
+        '<div class="shop-row"><div class="shop-info"><div class="shop-title"><b>' + esc(r['店名']) + '</b>' +
+          (r['導航'] ? '<a class="shop-map" href="' + esc(mapUrl(r['導航'])) + '" target="_blank" rel="noopener">' + ICON.map + '地圖</a>' : '') + '</div>' +
           (r['位置'] ? '<span class="shop-where">' + esc(r['位置']) + '</span>' : '') +
           (r['怎麼走'] ? '<small>' + esc(r['怎麼走']) + '</small>' : '') +
           '<small class="shop-close">閉店 ' + esc(r['閉店']) + '</small></div>' +
-          (r['導航'] ? '<div class="shop-btns"><a class="nav-go" href="' + esc(mapUrl(r['導航'])) + '" target="_blank" rel="noopener">' + ICON.map + '地圖</a>' +
-            '<a class="nav-go" href="' + esc(walkUrl(r['導航'])) + '" target="_blank" rel="noopener">' + ICON.nav + '導航</a></div>' : '') +
+          (r['導航'] ? '<a class="nav-go" href="' + esc(walkUrl(r['導航'])) + '" target="_blank" rel="noopener">' + ICON.nav + '導航</a>' : '') +
         '</div>').join('');
       const coupon = groups[g].find((r) => r['優惠券圖片'] || r['優惠券']);
       return '<div class="link-group"><div class="shop-head"><h3>' + esc(g) + '</h3>' + (coupon ? '<div class="shop-coupons">' + couponBtns(coupon) + '</div>' : '') + '</div>' +
