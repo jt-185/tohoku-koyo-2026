@@ -40,6 +40,7 @@
   const mapUrl = (q) => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
   // 沒給起點時 Google 地圖會用手機目前位置當起點
   const navUrl = (q) => 'https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=' + encodeURIComponent(q);
+  const walkUrl = (q) => 'https://www.google.com/maps/dir/?api=1&travelmode=walking&destination=' + encodeURIComponent(q);
 
   function parseLatLng(s) {
     const m = String(s || '').match(/(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/);
@@ -862,7 +863,25 @@
       '<div class="progress">' + progress + '</div>' +
       '<p class="hint">' + hint + '</p>' +
       '<div class="stack">' + list + '</div>' +
+      viewShopping() +
       viewLinks();
+  }
+
+  // 逛街：飯店附近的店，導航用步行路線
+  function viewShopping() {
+    const groups = {};
+    rows('逛街').forEach((r) => { if (r['店名']) (groups[r['分類']] = groups[r['分類']] || []).push(r); });
+    const html = Object.keys(groups).map((g) => {
+      const items = groups[g].map((r) =>
+        '<div class="shop-row"><div class="shop-info"><b>' + esc(r['店名']) + '</b>' +
+          '<span class="shop-where">' + esc(r['位置']) + '</span>' +
+          (r['怎麼走'] ? '<small>' + esc(r['怎麼走']) + '</small>' : '') +
+          '<small class="shop-close">閉店 ' + esc(r['閉店']) + '</small></div>' +
+          (r['導航'] ? '<a class="nav-go" href="' + esc(walkUrl(r['導航'])) + '" target="_blank" rel="noopener">' + ICON.nav + '導航</a>' : '') +
+        '</div>').join('');
+      return '<div class="link-group"><h3>' + esc(g) + '</h3><div class="card links-card">' + items + '</div></div>';
+    }).join('');
+    return html ? '<h3 class="sub-title">逛街</h3><p class="hint">從仙台東大都會大飯店（仙台站東口）走路出發，導航是步行路線。步行時間是估算，閉店時間以現場為準。</p>' + html : '';
   }
 
   function viewLinks() {

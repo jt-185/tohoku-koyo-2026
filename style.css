@@ -763,3 +763,13 @@ body::after {
 .spot-head { flex-wrap: wrap; row-gap: 6px; }
 .spot-head > div:first-child { min-width: 0; flex: 1 1 150px; }
 .spot-head .badge { white-space: normal; max-width: 100%; line-height: 1.45; padding-top: 2px; padding-bottom: 2px; }
+
+/* 逛街：店家列表 */
+.shop-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; }
+.shop-row + .shop-row { border-top: 1px solid var(--line); }
+.shop-info { min-width: 0; }
+.shop-info b { display: block; font-weight: 600; }
+.shop-where { display: block; color: var(--ink-2); font-size: 14px; line-height: 1.5; }
+.shop-info small { display: block; color: var(--ink-3); font-size: 12.5px; line-height: 1.5; }
+.shop-info .shop-close { color: var(--maple); font-weight: 500; }
+.shop-row .nav-go { flex: none; padding: 6px 12px; font-size: 13px; text-decoration: none; }
