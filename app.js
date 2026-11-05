@@ -859,12 +859,12 @@
       : '目前還沒連上試算表，勾選只會存在這台裝置。';
 
     return viewShopping() +
+      viewLinks() +
       '<div class="section-title spaced"><h2>出發準備</h2><p>每個人自己勾</p></div>' +
       '<p class="hint">我是：</p><div class="who" style="--n:' + people.length + '">' + whoChips + '</div>' +
       '<div class="progress">' + progress + '</div>' +
       '<p class="hint">' + hint + '</p>' +
-      '<div class="stack">' + list + '</div>' +
-      viewLinks();
+      '<div class="stack">' + list + '</div>';
   }
 
   const couponFiles = {};
