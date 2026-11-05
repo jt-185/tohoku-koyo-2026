@@ -891,7 +891,7 @@
     const html = Object.keys(groups).map((g) => {
       const items = groups[g].map((r) =>
         '<div class="shop-row"><div class="shop-info"><b>' + esc(r['店名']) + '</b>' +
-          '<span class="shop-where">' + esc(r['位置']) + '</span>' +
+          (r['位置'] ? '<span class="shop-where">' + esc(r['位置']) + '</span>' : '') +
           (r['怎麼走'] ? '<small>' + esc(r['怎麼走']) + '</small>' : '') +
           '<small class="shop-close">閉店 ' + esc(r['閉店']) + '</small></div>' +
           (r['導航'] ? '<a class="nav-go" href="' + esc(walkUrl(r['導航'])) + '" target="_blank" rel="noopener">' + ICON.nav + '導航</a>' : '') +
