@@ -90,9 +90,14 @@
   }).join('');
 
   // 依點的範圍算 viewBox；ratio 是寬/高，不給就照點的形狀
+  // pad 給 [最小, 最大] 時依範圍調整：點都擠在一小塊（例如奧日光）時留白少一點，畫面放大
   function fitVB(lls, pad, ratio, minW) {
     const xy = lls.map(proj);
     const xs = xy.map((p) => p[0]), ys = xy.map((p) => p[1]);
+    if (Array.isArray(pad)) {
+      const ext = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+      pad = Math.min(pad[1], Math.max(pad[0], ext * 0.3));
+    }
     const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
     let w = Math.max(...xs) - Math.min(...xs) + pad * 2;
     let h = Math.max(...ys) - Math.min(...ys) + pad * 2;

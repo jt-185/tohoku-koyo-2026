@@ -489,7 +489,7 @@
       return '<div class="gmap-box' + (crop ? ' crop' : '') + '" data-day="' + dm.n + '"><iframe class="gmap" title="Google 地圖路線" allowfullscreen></iframe></div>';
     }
     const lls = dm.pts.concat(dm.alts).map((p) => p.ll);
-    return TripMap.render(all, { vb: TripMap.fitVB(lls, 60, 4 / 3, 300), focus: dm.n, numbers: true });
+    return TripMap.render(all, { vb: TripMap.fitVB(lls, [16, 60], 4 / 3, 72), focus: dm.n, numbers: true });
   }
 
   function overviewHtml(days, all) {
